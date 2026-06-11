@@ -1,0 +1,70 @@
+---
+sidebar_label: Folder
+sidebar_position: 9
+---
+
+# Folder API
+
+`FolderHandle` manages project-scoped folders. Folders are always scoped to a project.
+
+## Access
+
+```ts
+const folder = client.folder('project-id');
+```
+
+:::note
+Unlike other handles, `FolderHandle` requires a `projectId` at construction time because folder endpoints are project-scoped.
+:::
+
+## Methods
+
+### `list(params?)`
+
+List folders in the project.
+
+```ts
+const { data, nextCursor } = await client.folder('proj-123').list({
+  limit: 10,
+  filter: 'name',
+  sortBy: 'name:asc',
+});
+```
+
+### `get(folderId)`
+
+Get a folder by ID.
+
+```ts
+const folder = await client.folder('proj-123').get('folder-456');
+```
+
+### `create(data)`
+
+Create a new folder.
+
+```ts
+const folder = await client.folder('proj-123').create({
+  name: 'Production Workflows',
+});
+```
+
+### `update(folderId, data)`
+
+Update a folder.
+
+```ts
+const updated = await client.folder('proj-123').update('folder-456', {
+  name: 'Prod Workflows',
+});
+```
+
+### `delete(folderId, transferToFolderId?)`
+
+Delete a folder, optionally transferring its contents to another folder.
+
+```ts
+await client.folder('proj-123').delete('folder-456');
+// or transfer contents first
+await client.folder('proj-123').delete('folder-456', 'other-folder-789');
+```

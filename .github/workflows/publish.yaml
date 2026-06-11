@@ -1,0 +1,31 @@
+name: 21.Publish NPM Package
+
+on:
+  push:
+    tags:
+    - v*.*.*
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+    - uses: hmarr/debug-action@cd1afbd7852b7ad7b1b7a9a1b03efebd3b0a1820
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+
+    - name: Setup Tools
+      uses: ./.github/actions/setup-tools
+
+    - name: Setup NPM Packages
+      uses: ./.github/actions/setup-npm
+
+    - name: Publish Packages
+      run: |
+        cat >"/home/runner/.npmrc" <<EOF
+        //registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}
+        registry=https://registry.npmjs.org/
+        always-auth=true
+        EOF
+        node scripts/publish.mjs

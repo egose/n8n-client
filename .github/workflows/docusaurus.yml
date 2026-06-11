@@ -1,0 +1,38 @@
+name: 22.Publish Docusaurus via GitHub Pages
+
+on:
+  push:
+    branches:
+    - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: hmarr/debug-action@cd1afbd7852b7ad7b1b7a9a1b03efebd3b0a1820
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+
+    - name: Setup Tools
+      uses: ./.github/actions/setup-tools
+
+    - name: Setup NPM Packages
+      uses: ./.github/actions/setup-npm
+
+    - name: Build the Docusaurus site
+      run: |
+        pnpm build
+      working-directory: website
+
+    - name: Deploy GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.8.0
+      with:
+        branch: cf-pages
+        folder: ./website/build
+        clean: true

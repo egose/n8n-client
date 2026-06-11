@@ -1,0 +1,59 @@
+---
+sidebar_label: Variable
+sidebar_position: 6
+---
+
+# Variable API
+
+`VariableHandle` manages n8n environment variables.
+
+## Access
+
+```ts
+const variable = client.variable();
+```
+
+## Methods
+
+### `list(params?)`
+
+List variables with optional filters.
+
+```ts
+const { data, nextCursor } = await client.variable().list({
+  limit: 50,
+  projectId: 'proj-1',
+  state: 'empty',
+});
+```
+
+### `create(data)`
+
+Create a new variable.
+
+```ts
+await client.variable().create({
+  key: 'MY_API_KEY',
+  value: 'secret-value',
+  projectId: 'proj-1',
+});
+```
+
+### `update(id, data)`
+
+Update a variable.
+
+```ts
+await client.variable().update('var-123', {
+  key: 'MY_API_KEY',
+  value: 'new-value',
+});
+```
+
+### `delete(id)`
+
+Delete a variable.
+
+```ts
+await client.variable().delete('var-123');
+```

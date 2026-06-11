@@ -1,0 +1,27 @@
+---
+sidebar_label: Overview
+sidebar_position: 0
+---
+
+import CodeBlock from '@theme/CodeBlock';
+
+# Examples Overview
+
+This example demonstrates a full end-to-end setup using `n8n-client`. It shows how to authenticate, manage workflows, credentials, projects, and users through the typed API.
+
+The snippet is intentionally comprehensive to illustrate how different building blocks fit together in a real-world scenario. In practice, you would typically split this logic across smaller scripts or services.
+
+For focused walkthroughs, use the dedicated pages:
+
+- [Workflow Management](/example/workflow-management/) for creating, activating, and versioning workflows.
+- [Execution Monitoring](/example/execution-monitoring/) for listing, filtering, and stopping executions.
+- [Credential Management](/example/credential-management/) for CRUD, testing, and transferring credentials.
+- [Project Organization](/example/project-organization/) for projects, folders, and member management.
+
+---
+
+```mdx-code-block
+import OverviewSample from '!!raw-loader!../../.samples/overview.ts';
+
+<CodeBlock language="ts">{OverviewSample}</CodeBlock>
+```

@@ -1,0 +1,117 @@
+---
+sidebar_label: Quick Start
+sidebar_position: 1
+---
+
+# Quick Start
+
+## Installation
+
+```bash npm2yarn
+npm install @egose/n8n-client --save
+```
+
+## Authentication
+
+The n8n Public API supports two authentication methods: **API key** and **Bearer token**.
+
+### API Key (recommended)
+
+```ts
+import N8nClient from '@egose/n8n-client';
+
+const client = new N8nClient({
+  baseUrl: 'http://localhost:5678',
+  apiKey: 'your-n8n-api-key',
+});
+```
+
+### Bearer Token (JWT)
+
+```ts
+const client = new N8nClient({
+  baseUrl: 'http://localhost:5678',
+  bearerToken: 'your-jwt-token',
+});
+```
+
+## Basic Usage
+
+### List Workflows
+
+```ts
+const { data: workflows, nextCursor } = await client.workflow().list({
+  limit: 10,
+  active: true,
+});
+```
+
+### Get a Workflow
+
+```ts
+const workflow = await client.workflow().get('workflow-id');
+console.log(workflow.name, workflow.active);
+```
+
+### Create a Credential
+
+```ts
+const credential = await client.credential().create({
+  name: 'My API Key',
+  type: 'httpHeaderAuth',
+  data: {
+    headerName: 'Authorization',
+    headerValue: 'Bearer secret-token',
+  },
+});
+```
+
+### Manage Executions
+
+```ts
+// List error executions
+const { data: errors } = await client.execution().list({
+  status: 'error',
+  workflowId: 'workflow-id',
+});
+
+// Stop a running execution
+await client.execution().stop(executionId);
+```
+
+### Organize with Projects
+
+```ts
+await client.project().create({ name: 'Production' });
+
+await client.project().addMembers('project-id', [
+  { userId: 'user-id', role: 'project:admin' },
+]);
+```
+
+## Resource Handles
+
+Every n8n API resource has a typed handle:
+
+| Handle | Access | Description |
+|--------|--------|-------------|
+| `WorkflowHandle` | `client.workflow()` | Create, list, activate, archive workflows |
+| `ExecutionHandle` | `client.execution()` | List, get, stop, retry executions |
+| `CredentialHandle` | `client.credential()` | CRUD, test, transfer credentials |
+| `TagHandle` | `client.tag()` | Manage workflow/execution tags |
+| `UserHandle` | `client.user()` | List, create, delete users |
+| `VariableHandle` | `client.variable()` | Manage environment variables |
+| `ProjectHandle` | `client.project()` | CRUD projects and members |
+| `DataTableHandle` | `client.dataTable()` | Tables, columns, and rows |
+| `FolderHandle` | `client.folder(projectId)` | Project-scoped folder management |
+| `CommunityPackageHandle` | `client.communityPackage()` | Install, update, uninstall packages |
+| `AuditHandle` | `client.audit()` | Generate audit reports |
+| `InsightsHandle` | `client.insights()` | Execution insights summary |
+| `SourceControlHandle` | `client.sourceControl()` | Git-based source control |
+| `DiscoverHandle` | `client.discover()` | Discover available resources |
+| `N8nPackageHandle` | `client.n8nPackage()` | Import/export workflow packages |
+
+## Next Steps
+
+- Browse the [API Reference](/api/n8n-client/) for the full method surface.
+- Check out [Examples](/example/overview/) for end-to-end walkthroughs.

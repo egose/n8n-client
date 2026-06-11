@@ -1,0 +1,84 @@
+{
+  "name": "@egose/n8n-client",
+  "version": "0.7.0",
+  "description": "TypeScript client for the n8n Public API with cursor-based pagination and typed resource handles.",
+  "keywords": [
+    "n8n",
+    "n8n-api",
+    "workflow-automation",
+    "automation",
+    "typescript",
+    "client",
+    "api-client"
+  ],
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "rimraf ./build && tsc",
+    "bundle": "tsup",
+    "lint-fix": "eslint --fix .",
+    "test:unit": "vitest run --no-cache --config vitest.unit.config.ts",
+    "test:integration": "vitest run --no-cache --config vitest.integration.config.ts",
+    "test": "vitest run --no-cache",
+    "release": "release-it",
+    "changelog": "node changelog.mjs"
+  },
+  "type": "module",
+  "author": "J.Dev",
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/egose/n8n-client"
+  },
+  "bugs": {
+    "url": "https://github.com/egose/n8n-client/issues"
+  },
+  "homepage": "https://n8n-client.pages.dev/",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/format": "^20.5.0",
+    "@eslint/js": "^10.0.1",
+    "@release-it/bumper": "^7.0.5",
+    "@types/eslint-config-prettier": "^6.11.3",
+    "@types/node": "^25.5.0",
+    "conventional-changelog": "^7.2.0",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "dotenv": "^17.4.0",
+    "eslint": "10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "fs-extra": "^11.3.4",
+    "prettier": "4.0.0-alpha.13",
+    "release-it": "^20.0.1",
+    "rimraf": "^6.1.3",
+    "semver": "^7.7.4",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vitest": "^4.1.2",
+    "wait-on": "^9.0.4",
+    "yaml": "^2.9.0",
+    "yargs": "^18.0.0"
+  }
+}

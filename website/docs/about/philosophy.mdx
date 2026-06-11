@@ -1,0 +1,131 @@
+---
+sidebar_label: Philosophy
+sidebar_position: 0
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Philosophy
+
+`n8n-client` is a typed TypeScript client for the **n8n Public API v1**. It wraps native `fetch` with resource-scoped handles so you can manage workflows, executions, credentials, projects, and every other n8n API resource through a consistent, discoverable interface.
+
+---
+
+## Why?
+
+The n8n Public API is well-documented, but calling it directly means:
+- Hand-writing `fetch` calls with correct headers and error handling every time.
+- Remembering query parameter names for pagination, filtering, and sorting.
+- Building retry logic for rate limits, timeouts, and server errors.
+
+`n8n-client` solves this with:
+- **Full TypeScript types** for every request and response.
+- **Transparent authentication** — API key or Bearer token, validated at construction.
+- **Automatic retry** with exponential backoff on transient errors.
+- **Native fetch** — zero external dependencies.
+- **Resource-scoped handles** that make the API discoverable without memorizing endpoints.
+
+---
+
+## Core Ideas
+
+### 1. Resource-Centric Design
+
+Each n8n API resource gets its own handle:
+
+```ts
+const client = new N8nClient({ baseUrl, apiKey });
+
+client.workflow()      // WorkflowHandle
+client.execution()     // ExecutionHandle
+client.credential()    // CredentialHandle
+client.project()       // ProjectHandle
+```
+
+No need to remember endpoint paths — follow the handle chain.
+
+### 2. Typed End-to-End
+
+Every method is fully typed:
+
+```ts
+const { data, nextCursor } = await client.workflow().list({ limit: 10, active: true });
+// data is Workflow[], nextCursor is string | undefined
+```
+
+Your IDE autocompletes parameters, return types are clear, and refactors are safe.
+
+### 3. Built-In Resilience
+
+Transient errors are retried automatically:
+
+```ts
+// Automatically retries on 408, 429, 500, 502, 503, 504
+// with exponential backoff and jitter
+const workflow = await client.workflow().get('wf-123');
+```
+
+No need for wrapper libraries or manual retry loops.
+
+### 4. Zero Dependencies
+
+The client uses Node.js 20+ built-in `fetch`. No axios, no node-fetch, no extra packages to audit or maintain.
+
+### 5. Flat, Predictable API
+
+n8n's API is flat. The client mirrors this:
+
+```ts
+await client.workflow().list();           // GET /api/v1/workflows
+await client.execution().get(123);        // GET /api/v1/executions/123
+await client.credential().create({...});  // POST /api/v1/credentials
+```
+
+Every handle works the same way: `list`, `get`, `create`, `update`, `delete` — plus resource-specific actions.
+
+---
+
+## Summary
+
+`n8n-client` exists to make the n8n Public API:
+- **Type-safe** — every request and response is typed
+- **Consistent** — same patterns across all 15 resources
+- **Resilient** — automatic retry with backoff
+- **Dependency-free** — native fetch, nothing else
+
+It's a developer experience layer on top of the n8n REST API — perfect for automation scripts, CI/CD pipelines, admin tooling, and production integrations.
+
+---
+
+<Tabs>
+  <TabItem value="before" label="Before (raw fetch)">
+    ```ts
+    const response = await fetch('http://localhost:5678/api/v1/workflows?limit=10&active=true', {
+      headers: {
+        'X-N8N-API-KEY': process.env.N8N_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const { data, nextCursor } = await response.json();
+    ```
+  </TabItem>
+  <TabItem value="after" label="After (n8n-client)">
+    ```ts
+    const client = new N8nClient({
+      baseUrl: 'http://localhost:5678',
+      apiKey: process.env.N8N_API_KEY,
+    });
+
+    const { data, nextCursor } = await client.workflow().list({
+      limit: 10,
+      active: true,
+    });
+    ```
+  </TabItem>
+</Tabs>

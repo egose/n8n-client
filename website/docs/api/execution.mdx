@@ -1,0 +1,92 @@
+---
+sidebar_label: Execution
+sidebar_position: 2
+---
+
+# Execution API
+
+`ExecutionHandle` monitors and controls workflow executions — list, get, stop, retry, and manage tags.
+
+## Access
+
+```ts
+const execution = client.execution();
+```
+
+## Methods
+
+### `list(params?)`
+
+List executions with optional filters.
+
+```ts
+const { data, nextCursor } = await client.execution().list({
+  limit: 25,
+  status: 'error',
+  workflowId: 'wf-123',
+  projectId: 'proj-1',
+  includeData: true,
+  redactExecutionData: false,
+});
+```
+
+### `get(id, params?)`
+
+Get an execution by ID.
+
+```ts
+const execution = await client.execution().get(123, {
+  includeData: true,
+  redactExecutionData: false,
+});
+```
+
+### `delete(id)`
+
+Delete an execution.
+
+```ts
+const deleted = await client.execution().delete(123);
+```
+
+### `retry(id, data?)`
+
+Retry a failed execution.
+
+```ts
+const retried = await client.execution().retry(123, {
+  loadWorkflow: true,
+});
+```
+
+### `stop(id)`
+
+Stop a running execution.
+
+```ts
+const stopped = await client.execution().stop(123);
+```
+
+### `stopMany(data)`
+
+Stop multiple executions matching filters.
+
+```ts
+const { stopped } = await client.execution().stopMany({
+  status: ['running', 'queued', 'waiting'],
+  workflowId: 'wf-123',
+  startedAfter: '2024-01-01T00:00:00Z',
+  startedBefore: '2024-01-02T00:00:00Z',
+});
+```
+
+### `getTags(id)` / `updateTags(id, tags)`
+
+Get or update tags on an execution.
+
+```ts
+const tags = await client.execution().getTags(123);
+const updatedTags = await client.execution().updateTags(123, [
+  { id: 'tag-1' },
+]);
+```

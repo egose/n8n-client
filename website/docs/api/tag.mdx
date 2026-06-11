@@ -1,0 +1,56 @@
+---
+sidebar_label: Tag
+sidebar_position: 4
+---
+
+# Tag API
+
+`TagHandle` manages tags for workflows and executions.
+
+## Access
+
+```ts
+const tag = client.tag();
+```
+
+## Methods
+
+### `list(params?)`
+
+List all tags.
+
+```ts
+const { data, nextCursor } = await client.tag().list({ limit: 20 });
+```
+
+### `get(id)`
+
+Get a tag by ID.
+
+```ts
+const tag = await client.tag().get('tag-123');
+```
+
+### `create(data)`
+
+Create a new tag.
+
+```ts
+const tag = await client.tag().create({ name: 'production' });
+```
+
+### `update(id, data)`
+
+Update a tag.
+
+```ts
+const updated = await client.tag().update('tag-123', { name: 'prod' });
+```
+
+### `delete(id)`
+
+Delete a tag.
+
+```ts
+const deleted = await client.tag().delete('tag-123');
+```

@@ -1,0 +1,65 @@
+---
+sidebar_label: User
+sidebar_position: 5
+---
+
+# User API
+
+`UserHandle` manages n8n users — list, get, create, delete, and change roles.
+
+## Access
+
+```ts
+const user = client.user();
+```
+
+## Methods
+
+### `list(params?)`
+
+List users with optional filters.
+
+```ts
+const { data, nextCursor } = await client.user().list({
+  limit: 10,
+  offset: 0,
+  includeRole: true,
+  projectId: 'proj-1',
+});
+```
+
+### `get(id, params?)`
+
+Get a user by ID.
+
+```ts
+const user = await client.user().get('user-123', { includeRole: true });
+```
+
+### `create(data)`
+
+Create one or more users.
+
+```ts
+const result = await client.user().create([
+  { email: 'alice@example.com', role: 'global:member' },
+  { email: 'bob@example.com', role: 'global:admin' },
+]);
+// result.user contains the created user info
+```
+
+### `delete(id)`
+
+Delete a user.
+
+```ts
+await client.user().delete('user-123');
+```
+
+### `changeRole(id, newRoleName)`
+
+Change a user's global role.
+
+```ts
+await client.user().changeRole('user-123', 'global:admin');
+```

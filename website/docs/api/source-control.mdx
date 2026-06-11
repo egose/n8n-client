@@ -1,0 +1,27 @@
+---
+sidebar_label: Source Control
+sidebar_position: 13
+---
+
+# Source Control API
+
+`SourceControlHandle` manages git-based source control operations.
+
+## Access
+
+```ts
+const sourceControl = client.sourceControl();
+```
+
+## Methods
+
+### `pull(data?)`
+
+Pull changes from the remote source control repository.
+
+```ts
+const files = await client.sourceControl().pull({
+  // Optional pull parameters
+});
+// files is SourceControlledFile[]
+```

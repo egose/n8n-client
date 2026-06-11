@@ -1,0 +1,83 @@
+---
+sidebar_label: Project
+sidebar_position: 7
+---
+
+# Project API
+
+`ProjectHandle` manages n8n projects and their members.
+
+## Access
+
+```ts
+const project = client.project();
+```
+
+## Methods
+
+### `list(params?)`
+
+List all projects.
+
+```ts
+const { data, nextCursor } = await client.project().list({ limit: 10 });
+```
+
+### `create(data)`
+
+Create a new project.
+
+```ts
+await client.project().create({ name: 'Production' });
+```
+
+### `update(id, data)`
+
+Update a project.
+
+```ts
+await client.project().update('proj-123', { name: 'Production v2' });
+```
+
+### `delete(id)`
+
+Delete a project.
+
+```ts
+await client.project().delete('proj-123');
+```
+
+### `listMembers(projectId, params?)`
+
+List members of a project.
+
+```ts
+const { data } = await client.project().listMembers('proj-123', { limit: 50 });
+```
+
+### `addMembers(projectId, relations)`
+
+Add members to a project.
+
+```ts
+await client.project().addMembers('proj-123', [
+  { userId: 'user-1', role: 'project:admin' },
+  { userId: 'user-2', role: 'project:editor' },
+]);
+```
+
+### `removeMember(projectId, userId)`
+
+Remove a member from a project.
+
+```ts
+await client.project().removeMember('proj-123', 'user-1');
+```
+
+### `changeMemberRole(projectId, userId, role)`
+
+Change a member's role in a project.
+
+```ts
+await client.project().changeMemberRole('proj-123', 'user-1', 'project:viewer');
+```

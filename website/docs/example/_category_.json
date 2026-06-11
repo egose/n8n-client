@@ -1,0 +1,9 @@
+{
+  "label": "Examples",
+  "link": {
+    "type": "generated-index",
+    "title": "Examples",
+    "description": "End-to-end walkthroughs for common n8n automation patterns with n8n-client.",
+    "slug": "/example"
+  }
+}

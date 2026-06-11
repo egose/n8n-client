@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* See https://docusaurus.io/docs/styling-layout/#styling-your-site-with-infima */
+:root {
+  --ifm-color-primary: #2563eb; /* Blue-600 */
+  --ifm-color-primary-dark: #1e54c4;
+  --ifm-color-primary-darker: #1b4cb1;
+  --ifm-color-primary-darkest: #153d8e;
+  --ifm-color-primary-light: #3b82f6; /* Blue-500 */
+  --ifm-color-primary-lighter: #60a5fa; /* Blue-400 */
+  --ifm-color-primary-lightest: #93c5fd; /* Blue-300 */
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #60a5fa; /* Blue-400 */
+  --ifm-color-primary-dark: #4f91f0;
+  --ifm-color-primary-darker: #4583dc;
+  --ifm-color-primary-darkest: #3669b5;
+  --ifm-color-primary-light: #93c5fd; /* Blue-300 */
+  --ifm-color-primary-lighter: #bfdbfe; /* Blue-200 */
+  --ifm-color-primary-lightest: #dbeafe; /* Blue-100 */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Hide all headers inside blog post excerpts on list page */
+article.margin-bottom--xl h3 {
+  display: none;
+}
+
+/* Home Button in Breadcrumbs */
+a.breadcrumbs__link[aria-label='Home page'] {
+  vertical-align: bottom;
+}

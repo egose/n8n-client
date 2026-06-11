@@ -1,0 +1,28 @@
+---
+sidebar_label: Discover
+sidebar_position: 14
+---
+
+# Discover API
+
+`DiscoverHandle` discovers available resources and operations in the n8n instance.
+
+## Access
+
+```ts
+const discover = client.discover();
+```
+
+## Methods
+
+### `get(params?)`
+
+Discover available resources, optionally filtered by type.
+
+```ts
+const resources = await client.discover().get({
+  include: 'schemas',
+  resource: 'workflow',
+  operation: 'list',
+});
+```

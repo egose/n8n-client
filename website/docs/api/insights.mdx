@@ -1,0 +1,30 @@
+---
+sidebar_label: Insights
+sidebar_position: 12
+---
+
+# Insights API
+
+`InsightsHandle` retrieves execution insights and summaries.
+
+## Access
+
+```ts
+const insights = client.insights();
+```
+
+## Methods
+
+### `getSummary(params?)`
+
+Get an insights summary with optional date range and project filters.
+
+```ts
+const summary = await client.insights().getSummary({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  projectId: 'proj-123',
+});
+```
+
+The summary includes execution counts, success rates, and performance metrics.

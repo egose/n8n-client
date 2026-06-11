@@ -1,0 +1,129 @@
+---
+sidebar_label: Workflow
+sidebar_position: 1
+---
+
+# Workflow API
+
+`WorkflowHandle` manages n8n workflows — create, list, activate, deactivate, archive, transfer, and manage tags and versions.
+
+## Access
+
+```ts
+const workflow = client.workflow();
+```
+
+## Methods
+
+### `list(params?)`
+
+List workflows with optional filters.
+
+```ts
+const { data, nextCursor } = await client.workflow().list({
+  limit: 10,
+  active: true,
+  tags: 'production',
+  name: 'deploy',
+  projectId: 'proj-1',
+  excludePinnedData: true,
+});
+```
+
+### `get(id, params?)`
+
+Get a workflow by ID.
+
+```ts
+const workflow = await client.workflow().get('wf-123', {
+  excludePinnedData: false,
+});
+```
+
+### `create(data)`
+
+Create a new workflow.
+
+```ts
+const workflow = await client.workflow().create({
+  name: 'My Workflow',
+  nodes: [{ name: 'Start', type: 'n8n-nodes-base.start', position: [0, 0], parameters: {} }],
+  connections: {},
+  settings: { executionOrder: 'v1' },
+});
+```
+
+### `update(id, data)`
+
+Update a workflow.
+
+```ts
+const updated = await client.workflow().update('wf-123', {
+  name: 'Updated Name',
+  active: true,
+});
+```
+
+### `delete(id)`
+
+Delete a workflow.
+
+```ts
+const deleted = await client.workflow().delete('wf-123');
+```
+
+### `activate(id, data?)`
+
+Activate a workflow. Optionally provide version metadata.
+
+```ts
+const activated = await client.workflow().activate('wf-123', {
+  versionId: 'v-2',
+  name: 'Production version',
+});
+```
+
+### `deactivate(id)`
+
+Deactivate a workflow.
+
+```ts
+const deactivated = await client.workflow().deactivate('wf-123');
+```
+
+### `archive(id)` / `unarchive(id)`
+
+Archive or unarchive a workflow.
+
+```ts
+await client.workflow().archive('wf-123');
+await client.workflow().unarchive('wf-123');
+```
+
+### `transfer(id, destinationProjectId)`
+
+Move a workflow to another project.
+
+```ts
+await client.workflow().transfer('wf-123', 'proj-456');
+```
+
+### `getTags(id)` / `updateTags(id, tags)`
+
+Get or update tags on a workflow.
+
+```ts
+const tags = await client.workflow().getTags('wf-123');
+const updatedTags = await client.workflow().updateTags('wf-123', [
+  { id: 'tag-1' },
+  { id: 'tag-2' },
+]);
+```
+
+### `getVersion(id, versionId)`
+
+Get a specific workflow version.
+
+```ts
+const version = await client.workflow().getVersion('wf-123', 'v-1');
+```

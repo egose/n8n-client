@@ -1,0 +1,96 @@
+---
+sidebar_label: N8nClient
+sidebar_position: 0
+---
+
+# N8nClient API
+
+`N8nClient` is the root entry point. It creates an HTTP client and provides access to all 15 resource handles.
+
+## Constructor
+
+```ts
+import N8nClient from '@egose/n8n-client';
+
+const client = new N8nClient({
+  baseUrl: 'http://localhost:5678',
+  apiKey: process.env.N8N_API_KEY,
+});
+```
+
+### Config Options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `baseUrl` | `string` | Yes | n8n instance URL (e.g. `http://localhost:5678`) |
+| `apiKey` | `string` | No* | n8n API key (sent as `X-N8N-API-KEY` header) |
+| `bearerToken` | `string` | No* | JWT token (sent as `Authorization: Bearer` header) |
+
+*Either `apiKey` or `bearerToken` must be provided.
+
+## Resource Handles
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `workflow()` | `WorkflowHandle` | Workflow management |
+| `execution()` | `ExecutionHandle` | Execution monitoring |
+| `credential()` | `CredentialHandle` | Credential management |
+| `tag()` | `TagHandle` | Tag management |
+| `user()` | `UserHandle` | User management |
+| `variable()` | `VariableHandle` | Variable management |
+| `project()` | `ProjectHandle` | Project management |
+| `dataTable()` | `DataTableHandle` | Data table management |
+| `folder(projectId)` | `FolderHandle` | Folder management (project-scoped) |
+| `communityPackage()` | `CommunityPackageHandle` | Community package management |
+| `audit()` | `AuditHandle` | Audit report generation |
+| `insights()` | `InsightsHandle` | Execution insights |
+| `sourceControl()` | `SourceControlHandle` | Source control operations |
+| `discover()` | `DiscoverHandle` | Resource discovery |
+| `n8nPackage()` | `N8nPackageHandle` | Package import/export |
+
+## Low-Level Requests
+
+If you need an endpoint or option that is not covered by a handle yet, `N8nClient` exposes thin request helpers without exposing the transport object itself:
+
+```ts
+// Direct GET request
+const data = await client.get('/workflows', { limit: 5 });
+
+// Direct POST request
+await client.post('/workflows', { name: 'New Workflow', nodes: [], connections: {}, settings: {} });
+```
+
+## Error Handling
+
+The client throws `HttpError` for non-2xx responses:
+
+```ts
+import { HttpError } from '@egose/n8n-client';
+
+try {
+  await client.workflow().get('nonexistent');
+} catch (error) {
+  if (error instanceof HttpError) {
+    console.log(error.status);  // 404
+    console.log(error.message); // "Workflow not found"
+    console.log(error.data);    // Full error response body
+  }
+}
+```
+
+## Retry Behavior
+
+Transient errors are retried automatically with exponential backoff:
+- **408** Request Timeout
+- **429** Too Many Requests
+- **500** Internal Server Error
+- **502** Bad Gateway
+- **503** Service Unavailable
+- **504** Gateway Timeout
+
+## Exports
+
+```ts
+import N8nClient, { HttpClient, HttpError } from '@egose/n8n-client';
+import type { RequestOptions, Workflow, Execution, ... } from '@egose/n8n-client';
+```

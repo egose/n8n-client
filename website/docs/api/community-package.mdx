@@ -1,0 +1,53 @@
+---
+sidebar_label: Community Package
+sidebar_position: 10
+---
+
+# Community Package API
+
+`CommunityPackageHandle` manages n8n community packages — install, update, and uninstall npm packages.
+
+## Access
+
+```ts
+const communityPackage = client.communityPackage();
+```
+
+## Methods
+
+### `list()`
+
+List all installed community packages.
+
+```ts
+const packages = await client.communityPackage().list();
+```
+
+### `install(data)`
+
+Install a community package.
+
+```ts
+const pkg = await client.communityPackage().install({
+  packageName: 'n8n-nodes-base',
+});
+```
+
+### `update(name, data?)`
+
+Update a community package.
+
+```ts
+const updated = await client.communityPackage().update('n8n-nodes-base', {
+  version: '1.0.0',
+  verify: true,
+});
+```
+
+### `uninstall(name)`
+
+Uninstall a community package.
+
+```ts
+await client.communityPackage().uninstall('n8n-nodes-base');
+```

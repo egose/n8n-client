@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.wip
+.public-api/*
+!.public-api/**/
+!.public-api/**/*.yml
+!.public-api/**/*.yaml

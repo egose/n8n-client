@@ -1,0 +1,26 @@
+---
+sidebar_label: Audit
+sidebar_position: 11
+---
+
+# Audit API
+
+`AuditHandle` generates audit reports for your n8n instance.
+
+## Access
+
+```ts
+const audit = client.audit();
+```
+
+## Methods
+
+### `generate(data?)`
+
+Generate an audit report.
+
+```ts
+const report = await client.audit().generate({
+  // Optional filters
+});
+```
