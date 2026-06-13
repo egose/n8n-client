@@ -1,3 +1,15 @@
+## [0.2.0](https://github.com/egose/n8n-client/compare/v0.1.2...v0.2.0) (2026-06-13)
+
+### Features
+
+* **website:** add bound resource clients and resource helpers across website API ([06929b2](https://github.com/egose/n8n-client/commit/06929b242b5bca3d81b2a2ffc5b3a54dca127121))
+* **website:** rename resource handles to clients and update factory methods ([cd551cc](https://github.com/egose/n8n-client/commit/cd551cc860cbc0ee3a1b8fbb28985a56704f0c77))
+
+### Docs
+
+* **website:** document raw versus resource client usage patterns ([1015838](https://github.com/egose/n8n-client/commit/101583834502dd253d705dc5dcad55c4ad68d9d8))
+* **website:** refresh website docs and examples for client naming ([bf646e5](https://github.com/egose/n8n-client/commit/bf646e51b3c95f3e7a94414a8196e1336e2f9037))
+
 ## [0.1.2](https://github.com/egose/n8n-client/compare/v0.1.1...v0.1.2) (2026-06-13)
 
 ### Docs
