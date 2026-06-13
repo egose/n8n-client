@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import FolderHandle from '../src/handles/folder';
+import FolderClient from '../src/clients/folder';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: Folder', () => {
   test('list calls GET /projects/:projectId/folders', async () => {
     const http = createMockHttpClient([{ body: { count: 0, data: [] } }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     const result = await handle.list({ take: '10' });
 
@@ -16,7 +16,7 @@ describe('Implementation Consistency: Folder', () => {
   test('get calls GET /projects/:projectId/folders/:folderId', async () => {
     const folder = { id: 'f-1', name: 'My Folder', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: folder }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     const result = await handle.get('f-1');
 
@@ -27,7 +27,7 @@ describe('Implementation Consistency: Folder', () => {
   test('create calls POST /projects/:projectId/folders', async () => {
     const created = { id: 'f-2', name: 'New Folder', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: created }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     const result = await handle.create({ name: 'New Folder' });
 
@@ -38,7 +38,7 @@ describe('Implementation Consistency: Folder', () => {
   test('update calls PATCH /projects/:projectId/folders/:folderId', async () => {
     const updated = { id: 'f-1', name: 'Updated Folder', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     const result = await handle.update('f-1', { name: 'Updated Folder' });
 
@@ -48,7 +48,7 @@ describe('Implementation Consistency: Folder', () => {
 
   test('delete calls DELETE /projects/:projectId/folders/:folderId', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     await handle.delete('f-1');
 
@@ -57,7 +57,7 @@ describe('Implementation Consistency: Folder', () => {
 
   test('delete with transferToFolderId passes query param', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new FolderHandle(http, 'proj-1');
+    const handle = new FolderClient(http, 'proj-1');
 
     await handle.delete('f-1', 'f-2');
 

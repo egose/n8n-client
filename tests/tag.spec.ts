@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import TagHandle from '../src/handles/tag';
+import TagClient from '../src/clients/tag';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: Tag', () => {
   test('list calls GET /tags', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new TagHandle(http);
+    const handle = new TagClient(http);
 
     const result = await handle.list({ limit: 10 });
 
@@ -16,7 +16,7 @@ describe('Implementation Consistency: Tag', () => {
   test('get calls GET /tags/:id', async () => {
     const tag = { id: 't-1', name: 'Production', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: tag }]);
-    const handle = new TagHandle(http);
+    const handle = new TagClient(http);
 
     const result = await handle.get('t-1');
 
@@ -27,7 +27,7 @@ describe('Implementation Consistency: Tag', () => {
   test('create calls POST /tags', async () => {
     const created = { id: 't-2', name: 'Staging', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: created }]);
-    const handle = new TagHandle(http);
+    const handle = new TagClient(http);
 
     const result = await handle.create({ name: 'Staging' });
 
@@ -38,7 +38,7 @@ describe('Implementation Consistency: Tag', () => {
   test('update calls PUT /tags/:id', async () => {
     const updated = { id: 't-1', name: 'Prod', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new TagHandle(http);
+    const handle = new TagClient(http);
 
     const result = await handle.update('t-1', { name: 'Prod' });
 
@@ -48,7 +48,7 @@ describe('Implementation Consistency: Tag', () => {
 
   test('delete calls DELETE /tags/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new TagHandle(http);
+    const handle = new TagClient(http);
 
     await handle.delete('t-1');
 

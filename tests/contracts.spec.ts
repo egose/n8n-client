@@ -1,20 +1,20 @@
 import { describe, expectTypeOf, test } from 'vitest';
 import N8nClient from '../src/index';
-import AuditHandle from '../src/handles/audit';
-import CommunityPackageHandle from '../src/handles/community-package';
-import CredentialHandle from '../src/handles/credential';
-import ProjectHandle from '../src/handles/project';
-import DataTableHandle from '../src/handles/data-table';
-import DiscoverHandle from '../src/handles/discover';
-import ExecutionHandle from '../src/handles/execution';
-import FolderHandle from '../src/handles/folder';
-import InsightsHandle from '../src/handles/insights';
-import N8nPackageHandle from '../src/handles/n8n-package';
-import SourceControlHandle from '../src/handles/source-control';
-import TagHandle from '../src/handles/tag';
-import UserHandle from '../src/handles/user';
-import VariableHandle from '../src/handles/variable';
-import WorkflowHandle from '../src/handles/workflow';
+import AuditClient from '../src/clients/audit';
+import CommunityPackageClient from '../src/clients/community-package';
+import CredentialClient from '../src/clients/credential';
+import ProjectClient from '../src/clients/project';
+import DataTableClient from '../src/clients/data-table';
+import DiscoverClient from '../src/clients/discover';
+import ExecutionClient from '../src/clients/execution';
+import FolderClient from '../src/clients/folder';
+import InsightsClient from '../src/clients/insights';
+import N8nPackageClient from '../src/clients/n8n-package';
+import SourceControlClient from '../src/clients/source-control';
+import TagClient from '../src/clients/tag';
+import UserClient from '../src/clients/user';
+import VariableClient from '../src/clients/variable';
+import WorkflowClient from '../src/clients/workflow';
 import type {
   Audit,
   AuditCommunityLocation,
@@ -111,9 +111,9 @@ describe('Public API contracts', () => {
     expectTypeOf<ClientHasHttp>().toEqualTypeOf<false>();
   });
 
-  test('ProjectHandle does not expose unsupported get()', () => {
-    type ProjectHandleHasGet = 'get' extends keyof ProjectHandle ? true : false;
-    expectTypeOf<ProjectHandleHasGet>().toEqualTypeOf<false>();
+  test('ProjectClient does not expose unsupported get()', () => {
+    type ProjectClientHasGet = 'get' extends keyof ProjectClient ? true : false;
+    expectTypeOf<ProjectClientHasGet>().toEqualTypeOf<false>();
   });
 
   test('DiscoverResponse nests filters and specUrl under data', () => {
@@ -127,8 +127,8 @@ describe('Public API contracts', () => {
     }>();
   });
 
-  test('DataTableHandle row methods narrow return types from request flags', () => {
-    const handle = new DataTableHandle(createMockHttpClient());
+  test('DataTableClient row methods narrow return types from request flags', () => {
+    const handle = new DataTableClient(createMockHttpClient());
 
     expectTypeOf(handle.insertRows('dt-1', { data: [], returnType: 'id' })).toEqualTypeOf<Promise<number[]>>();
     expectTypeOf(handle.insertRows('dt-1', { data: [], returnType: 'all' })).toEqualTypeOf<Promise<DataTableRow[]>>();
@@ -154,28 +154,28 @@ describe('Public API contracts', () => {
     expectTypeOf(client.request).toBeFunction();
   });
 
-  test('N8nClient handle factories return the expected handle types', () => {
+  test('N8nClient client factories return the expected client types', () => {
     const client = new N8nClient({ baseUrl: 'http://localhost:5678', apiKey: 'test-key' }); // pragma: allowlist secret
 
-    expectTypeOf(client.workflow()).toEqualTypeOf<WorkflowHandle>();
-    expectTypeOf(client.execution()).toEqualTypeOf<ExecutionHandle>();
-    expectTypeOf(client.credential()).toEqualTypeOf<CredentialHandle>();
-    expectTypeOf(client.tag()).toEqualTypeOf<TagHandle>();
-    expectTypeOf(client.user()).toEqualTypeOf<UserHandle>();
-    expectTypeOf(client.variable()).toEqualTypeOf<VariableHandle>();
-    expectTypeOf(client.project()).toEqualTypeOf<ProjectHandle>();
-    expectTypeOf(client.dataTable()).toEqualTypeOf<DataTableHandle>();
-    expectTypeOf(client.folder('proj-1')).toEqualTypeOf<FolderHandle>();
-    expectTypeOf(client.communityPackage()).toEqualTypeOf<CommunityPackageHandle>();
-    expectTypeOf(client.audit()).toEqualTypeOf<AuditHandle>();
-    expectTypeOf(client.insights()).toEqualTypeOf<InsightsHandle>();
-    expectTypeOf(client.sourceControl()).toEqualTypeOf<SourceControlHandle>();
-    expectTypeOf(client.discover()).toEqualTypeOf<DiscoverHandle>();
-    expectTypeOf(client.n8nPackage()).toEqualTypeOf<N8nPackageHandle>();
+    expectTypeOf(client.workflows()).toEqualTypeOf<WorkflowClient>();
+    expectTypeOf(client.executions()).toEqualTypeOf<ExecutionClient>();
+    expectTypeOf(client.credentials()).toEqualTypeOf<CredentialClient>();
+    expectTypeOf(client.tags()).toEqualTypeOf<TagClient>();
+    expectTypeOf(client.users()).toEqualTypeOf<UserClient>();
+    expectTypeOf(client.variables()).toEqualTypeOf<VariableClient>();
+    expectTypeOf(client.projects()).toEqualTypeOf<ProjectClient>();
+    expectTypeOf(client.dataTables()).toEqualTypeOf<DataTableClient>();
+    expectTypeOf(client.folders('proj-1')).toEqualTypeOf<FolderClient>();
+    expectTypeOf(client.communityPackages()).toEqualTypeOf<CommunityPackageClient>();
+    expectTypeOf(client.audit()).toEqualTypeOf<AuditClient>();
+    expectTypeOf(client.insights()).toEqualTypeOf<InsightsClient>();
+    expectTypeOf(client.sourceControl()).toEqualTypeOf<SourceControlClient>();
+    expectTypeOf(client.discover()).toEqualTypeOf<DiscoverClient>();
+    expectTypeOf(client.n8nPackage()).toEqualTypeOf<N8nPackageClient>();
   });
 
-  test('WorkflowHandle method signatures stay stable', () => {
-    const handle = new WorkflowHandle(createMockHttpClient());
+  test('WorkflowClient method signatures stay stable', () => {
+    const handle = new WorkflowClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies WorkflowListParams)).toEqualTypeOf<Promise<WorkflowListResponse>>();
     expectTypeOf(handle.get('wf-1', {} satisfies WorkflowGetParams)).toEqualTypeOf<Promise<Workflow>>();
@@ -198,8 +198,8 @@ describe('Public API contracts', () => {
     expectTypeOf<Workflow['nodes'][number]>().toMatchTypeOf<{ customTelemetryTags?: WorkflowNodeTelemetryTags }>();
   });
 
-  test('ExecutionHandle method signatures stay stable', () => {
-    const handle = new ExecutionHandle(createMockHttpClient());
+  test('ExecutionClient method signatures stay stable', () => {
+    const handle = new ExecutionClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies ExecutionListParams)).toEqualTypeOf<Promise<ExecutionListResponse>>();
     expectTypeOf(handle.get(1, {} satisfies ExecutionGetParams)).toEqualTypeOf<Promise<Execution>>();
@@ -211,8 +211,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.updateTags(1, [{ id: 'tag-1' }])).toEqualTypeOf<Promise<Tag[]>>();
   });
 
-  test('CredentialHandle method signatures stay stable', () => {
-    const handle = new CredentialHandle(createMockHttpClient());
+  test('CredentialClient method signatures stay stable', () => {
+    const handle = new CredentialClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies PaginationParams)).toEqualTypeOf<Promise<CredentialListResponse>>();
     expectTypeOf(handle.get('cred-1')).toEqualTypeOf<Promise<CredentialResponse>>();
@@ -224,8 +224,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.getSchema('slackApi')).toEqualTypeOf<Promise<JsonObject>>();
   });
 
-  test('ProjectHandle method signatures stay stable', () => {
-    const handle = new ProjectHandle(createMockHttpClient());
+  test('ProjectClient method signatures stay stable', () => {
+    const handle = new ProjectClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies PaginationParams)).toEqualTypeOf<Promise<ProjectListResponse>>();
     expectTypeOf(handle.create({ name: 'Project' } satisfies ProjectMutation)).toEqualTypeOf<Promise<void>>();
@@ -241,8 +241,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.changeMemberRole('proj-1', 'user-1', 'project:admin')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('DataTableHandle method signatures stay stable', () => {
-    const handle = new DataTableHandle(createMockHttpClient());
+  test('DataTableClient method signatures stay stable', () => {
+    const handle = new DataTableClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies DataTableListParams)).toEqualTypeOf<Promise<DataTableListResponse>>();
     expectTypeOf(handle.get('dt-1')).toEqualTypeOf<Promise<DataTable>>();
@@ -288,8 +288,8 @@ describe('Public API contracts', () => {
     >();
   });
 
-  test('FolderHandle method signatures stay stable', () => {
-    const handle = new FolderHandle(createMockHttpClient(), 'proj-1');
+  test('FolderClient method signatures stay stable', () => {
+    const handle = new FolderClient(createMockHttpClient(), 'proj-1');
 
     expectTypeOf(handle.list({} satisfies FolderListParams)).toEqualTypeOf<Promise<FolderListResponse>>();
     expectTypeOf(handle.get('folder-1')).toEqualTypeOf<Promise<FolderDetail>>();
@@ -298,8 +298,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.delete('folder-1')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('TagHandle method signatures stay stable', () => {
-    const handle = new TagHandle(createMockHttpClient());
+  test('TagClient method signatures stay stable', () => {
+    const handle = new TagClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies PaginationParams)).toEqualTypeOf<Promise<TagListResponse>>();
     expectTypeOf(handle.get('tag-1')).toEqualTypeOf<Promise<Tag>>();
@@ -308,8 +308,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.delete('tag-1')).toEqualTypeOf<Promise<Tag>>();
   });
 
-  test('UserHandle method signatures stay stable', () => {
-    const handle = new UserHandle(createMockHttpClient());
+  test('UserClient method signatures stay stable', () => {
+    const handle = new UserClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies UserListParams)).toEqualTypeOf<Promise<UserListResponse>>();
     expectTypeOf(handle.get('user-1', {} satisfies UserGetParams)).toEqualTypeOf<Promise<User>>();
@@ -320,8 +320,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.changeRole('user-1', 'global:admin')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('VariableHandle method signatures stay stable', () => {
-    const handle = new VariableHandle(createMockHttpClient());
+  test('VariableClient method signatures stay stable', () => {
+    const handle = new VariableClient(createMockHttpClient());
 
     expectTypeOf(handle.list({} satisfies VariableListParams)).toEqualTypeOf<Promise<VariableListResponse>>();
     expectTypeOf(handle.create({ key: 'x', value: 'y' } satisfies VariableCreate)).toEqualTypeOf<Promise<void>>();
@@ -331,8 +331,8 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.delete('var-1')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('CommunityPackageHandle method signatures stay stable', () => {
-    const handle = new CommunityPackageHandle(createMockHttpClient());
+  test('CommunityPackageClient method signatures stay stable', () => {
+    const handle = new CommunityPackageClient(createMockHttpClient());
 
     expectTypeOf(handle.list()).toEqualTypeOf<Promise<CommunityPackage[]>>();
     expectTypeOf(handle.install({ name: 'n8n-nodes-test' } satisfies InstallCommunityPackageRequest)).toEqualTypeOf<
@@ -344,12 +344,12 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.uninstall('n8n-nodes-test')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('AuditHandle, InsightsHandle, SourceControlHandle, DiscoverHandle, and N8nPackageHandle stay stable', () => {
-    const audit = new AuditHandle(createMockHttpClient());
-    const insights = new InsightsHandle(createMockHttpClient());
-    const sourceControl = new SourceControlHandle(createMockHttpClient());
-    const discover = new DiscoverHandle(createMockHttpClient());
-    const n8nPackage = new N8nPackageHandle(createMockHttpClient());
+  test('AuditClient, InsightsClient, SourceControlClient, DiscoverClient, and N8nPackageClient stay stable', () => {
+    const audit = new AuditClient(createMockHttpClient());
+    const insights = new InsightsClient(createMockHttpClient());
+    const sourceControl = new SourceControlClient(createMockHttpClient());
+    const discover = new DiscoverClient(createMockHttpClient());
+    const n8nPackage = new N8nPackageClient(createMockHttpClient());
 
     expectTypeOf(audit.generate({} satisfies AuditRequest)).toEqualTypeOf<Promise<Audit>>();
     expectTypeOf(insights.getSummary({} satisfies InsightsSummaryParams)).toEqualTypeOf<Promise<InsightsSummary>>();

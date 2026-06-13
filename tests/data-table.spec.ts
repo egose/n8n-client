@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import DataTableHandle from '../src/handles/data-table';
+import DataTableClient from '../src/clients/data-table';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: DataTable', () => {
   test('list calls GET /data-tables', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.list({ limit: 10 });
 
@@ -16,7 +16,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('get calls GET /data-tables/:id', async () => {
     const table = { id: 'dt-1', name: 'Users', columns: [], projectId: 'p-1', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: table }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.get('dt-1');
 
@@ -27,7 +27,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('create calls POST /data-tables', async () => {
     const created = { id: 'dt-2', name: 'Logs', columns: [], projectId: 'p-1', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: created }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.create({ name: 'Logs', columns: [{ name: 'message', type: 'string' }] });
 
@@ -41,7 +41,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('update calls PATCH /data-tables/:id', async () => {
     const updated = { id: 'dt-1', name: 'Updated', columns: [], projectId: 'p-1', createdAt: '', updatedAt: '' };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.update('dt-1', { name: 'Updated' });
 
@@ -51,7 +51,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('delete calls DELETE /data-tables/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     await handle.delete('dt-1');
 
@@ -60,7 +60,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('listRows calls GET /data-tables/:id/rows', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.listRows('dt-1', { limit: 25 });
 
@@ -70,7 +70,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('insertRows calls POST /data-tables/:id/rows', async () => {
     const http = createMockHttpClient([{ body: { count: 3 } }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.insertRows('dt-1', { data: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }] });
 
@@ -82,7 +82,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('insertRows returns ids when requested', async () => {
     const http = createMockHttpClient([{ body: [1, 2, 3] }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.insertRows('dt-1', {
       data: [{ name: 'Alice' }],
@@ -99,7 +99,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('updateRows returns rows when returnData is true', async () => {
     const rows = [{ id: 1, name: 'Alice' }];
     const http = createMockHttpClient([{ body: rows }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.updateRows('dt-1', {
       filter: { filters: [{ columnName: 'name', condition: 'eq', value: 'Alice' }] },
@@ -117,7 +117,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('upsertRow returns boolean when returnData is false', async () => {
     const http = createMockHttpClient([{ body: true }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.upsertRow('dt-1', {
       filter: { filters: [{ columnName: 'email', condition: 'eq', value: 'alice@example.com' }] },
@@ -134,7 +134,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('deleteRows returns deleted rows when returnData is true', async () => {
     const rows = [{ id: 1, name: 'Alice' }];
     const http = createMockHttpClient([{ body: rows }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.deleteRows('dt-1', {
       filter: '{"filters":[{"columnName":"name","condition":"eq","value":"Alice"}]}',
@@ -151,7 +151,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('listColumns calls GET /data-tables/:id/columns', async () => {
     const columns = [{ id: 'col-1', name: 'email', type: 'string', index: 0 }];
     const http = createMockHttpClient([{ body: columns }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.listColumns('dt-1');
 
@@ -162,7 +162,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('createColumn calls POST /data-tables/:id/columns', async () => {
     const created = { id: 'col-2', name: 'age', type: 'number', index: 1 };
     const http = createMockHttpClient([{ body: created }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.createColumn('dt-1', { name: 'age', type: 'number' });
 
@@ -172,7 +172,7 @@ describe('Implementation Consistency: DataTable', () => {
 
   test('deleteColumn calls DELETE /data-tables/:id/columns/:colId', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     await handle.deleteColumn('dt-1', 'col-1');
 
@@ -182,7 +182,7 @@ describe('Implementation Consistency: DataTable', () => {
   test('updateColumn calls PATCH /data-tables/:id/columns/:colId', async () => {
     const updated = { id: 'col-1', name: 'email_address', type: 'string', index: 0 };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new DataTableHandle(http);
+    const handle = new DataTableClient(http);
 
     const result = await handle.updateColumn('dt-1', 'col-1', { name: 'email_address' });
 

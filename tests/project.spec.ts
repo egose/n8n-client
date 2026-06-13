@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import ProjectHandle from '../src/handles/project';
+import ProjectClient from '../src/clients/project';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: Project', () => {
   test('list calls GET /projects', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     const result = await handle.list({ limit: 5 });
 
@@ -15,7 +15,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('create calls POST /projects', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.create({ name: 'New Project' });
 
@@ -24,7 +24,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('update calls PUT /projects/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.update('p-1', { name: 'Updated Project' });
 
@@ -33,7 +33,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('delete calls DELETE /projects/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.delete('p-1');
 
@@ -42,7 +42,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('listMembers calls GET /projects/:id/users', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     const result = await handle.listMembers('p-1', { limit: 10 });
 
@@ -52,7 +52,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('addMembers calls POST /projects/:id/users', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.addMembers('p-1', [{ userId: 'u-1', role: 'project:viewer' }]);
 
@@ -63,7 +63,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('removeMember calls DELETE /projects/:id/users/:userId', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.removeMember('p-1', 'u-1');
 
@@ -72,7 +72,7 @@ describe('Implementation Consistency: Project', () => {
 
   test('changeMemberRole calls PATCH /projects/:id/users/:userId', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new ProjectHandle(http);
+    const handle = new ProjectClient(http);
 
     await handle.changeMemberRole('p-1', 'u-1', 'project:editor');
 

@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import CredentialHandle from '../src/handles/credential';
+import CredentialClient from '../src/clients/credential';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: Credential', () => {
   test('list calls GET /credentials', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.list({ limit: 5 });
 
@@ -25,7 +25,7 @@ describe('Implementation Consistency: Credential', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: cred }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.get('c-1');
 
@@ -45,7 +45,7 @@ describe('Implementation Consistency: Credential', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: created }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.create({ name: 'Slack', type: 'slackApi', data: { token: 'xoxb-123' } });
 
@@ -69,7 +69,7 @@ describe('Implementation Consistency: Credential', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.update('c-1', { name: 'GitHub Updated' });
 
@@ -87,7 +87,7 @@ describe('Implementation Consistency: Credential', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: deleted }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.delete('c-1');
 
@@ -97,7 +97,7 @@ describe('Implementation Consistency: Credential', () => {
 
   test('test calls POST /credentials/:id/test', async () => {
     const http = createMockHttpClient([{ body: { status: 'OK', message: 'Connection successful' } }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.test('c-1');
 
@@ -107,7 +107,7 @@ describe('Implementation Consistency: Credential', () => {
 
   test('transfer calls PUT /credentials/:id/transfer', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     await handle.transfer('c-1', 'proj-2');
 
@@ -117,7 +117,7 @@ describe('Implementation Consistency: Credential', () => {
   test('getSchema calls GET /credentials/schema/:typeName', async () => {
     const schema = { type: 'object', properties: { token: { type: 'string' } } };
     const http = createMockHttpClient([{ body: schema }]);
-    const handle = new CredentialHandle(http);
+    const handle = new CredentialClient(http);
 
     const result = await handle.getSchema('githubApi');
 

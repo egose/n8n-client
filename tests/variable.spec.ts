@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import VariableHandle from '../src/handles/variable';
+import VariableClient from '../src/clients/variable';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: Variable', () => {
   test('list calls GET /variables', async () => {
     const http = createMockHttpClient([{ body: { data: [], nextCursor: undefined } }]);
-    const handle = new VariableHandle(http);
+    const handle = new VariableClient(http);
 
     const result = await handle.list({ limit: 10 });
 
@@ -15,7 +15,7 @@ describe('Implementation Consistency: Variable', () => {
 
   test('create calls POST /variables', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new VariableHandle(http);
+    const handle = new VariableClient(http);
 
     await handle.create({ key: 'MY_API_KEY', value: 'secret123' });
 
@@ -24,7 +24,7 @@ describe('Implementation Consistency: Variable', () => {
 
   test('update calls PUT /variables/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new VariableHandle(http);
+    const handle = new VariableClient(http);
 
     await handle.update('v-1', { key: 'MY_API_KEY', value: 'newsecret' });
 
@@ -33,7 +33,7 @@ describe('Implementation Consistency: Variable', () => {
 
   test('delete calls DELETE /variables/:id', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new VariableHandle(http);
+    const handle = new VariableClient(http);
 
     await handle.delete('v-1');
 

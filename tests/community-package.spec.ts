@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import CommunityPackageHandle from '../src/handles/community-package';
+import CommunityPackageClient from '../src/clients/community-package';
 import { createMockHttpClient } from './test-utils';
 
 describe('Implementation Consistency: CommunityPackage', () => {
   test('list calls GET /community-packages', async () => {
     const http = createMockHttpClient([{ body: [] }]);
-    const handle = new CommunityPackageHandle(http);
+    const handle = new CommunityPackageClient(http);
 
     const result = await handle.list();
 
@@ -24,7 +24,7 @@ describe('Implementation Consistency: CommunityPackage', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: installed }]);
-    const handle = new CommunityPackageHandle(http);
+    const handle = new CommunityPackageClient(http);
 
     const result = await handle.install({ name: 'n8n-nodes-foo' });
 
@@ -43,7 +43,7 @@ describe('Implementation Consistency: CommunityPackage', () => {
       updatedAt: '',
     };
     const http = createMockHttpClient([{ body: updated }]);
-    const handle = new CommunityPackageHandle(http);
+    const handle = new CommunityPackageClient(http);
 
     const result = await handle.update('n8n-nodes-foo', { version: '2.0.0' });
 
@@ -53,7 +53,7 @@ describe('Implementation Consistency: CommunityPackage', () => {
 
   test('uninstall calls DELETE /community-packages/:name', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
-    const handle = new CommunityPackageHandle(http);
+    const handle = new CommunityPackageClient(http);
 
     await handle.uninstall('n8n-nodes-foo');
 
