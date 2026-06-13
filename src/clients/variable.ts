@@ -1,7 +1,7 @@
 import type { Variable, VariableCreate, VariableListResponse, VariableListParams } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class VariableHandle extends BaseHandle {
+export default class VariableClient extends BaseClient {
   async list(params?: VariableListParams): Promise<VariableListResponse> {
     return this.http.get<VariableListResponse>('/variables', params);
   }

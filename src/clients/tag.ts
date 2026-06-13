@@ -1,7 +1,7 @@
 import type { Tag, TagListResponse, PaginationParams, TagMutation } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class TagHandle extends BaseHandle {
+export default class TagClient extends BaseClient {
   async list(params?: PaginationParams): Promise<TagListResponse> {
     return this.http.get<TagListResponse>('/tags', params);
   }

@@ -24,9 +24,9 @@ import type {
   UpsertRowDataRequest,
   UpsertRowRequest,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class DataTableHandle extends BaseHandle {
+export default class DataTableClient extends BaseClient {
   async list(params?: DataTableListParams): Promise<DataTableListResponse> {
     return this.http.get<DataTableListResponse>('/data-tables', params);
   }

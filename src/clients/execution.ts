@@ -9,9 +9,9 @@ import type {
   Tag,
   TagId,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class ExecutionHandle extends BaseHandle {
+export default class ExecutionClient extends BaseClient {
   async list(params?: ExecutionListParams): Promise<ExecutionListResponse> {
     return this.http.get<ExecutionListResponse>('/executions', params);
   }

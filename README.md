@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  TypeScript client for the n8n Public API with cursor-based pagination and typed resource handles.
+  TypeScript client for the n8n Public API with cursor-based pagination and typed resource clients.
 </p>
 
 <p align="center">
@@ -25,14 +25,14 @@
 
 ## What It Is
 
-`@egose/n8n-client` provides a TypeScript client for the [n8n Public API](https://docs.n8n.io/api/). Instead of manually constructing HTTP requests and parsing responses, you work through resource handles:
+`@egose/n8n-client` provides a TypeScript client for the [n8n Public API](https://docs.n8n.io/api/). Instead of manually constructing HTTP requests and parsing responses, you work through resource clients:
 
 ```ts
 const client = new N8nClient({ baseUrl: 'http://localhost:5678', apiKey: 'your-api-key' }); // pragma: allowlist secret
 
-const workflows = await client.workflow().list({ limit: 10 });
-const workflow = await client.workflow().get('wf-1');
-const executions = await client.execution().list({ workflowId: 'wf-1', status: 'success' });
+const workflows = await client.workflows().list({ limit: 10 });
+const workflow = await client.workflows().get('wf-1');
+const executions = await client.executions().list({ workflowId: 'wf-1', status: 'success' });
 ```
 
 ## Why Use It
@@ -40,7 +40,7 @@ const executions = await client.execution().list({ workflowId: 'wf-1', status: '
 - Typed request/response objects for all n8n API endpoints
 - Cursor-based pagination built in
 - Automatic retry on transient server errors (5xx, 429, 408)
-- Consistent resource handle pattern across all resource types
+- Consistent resource client pattern across all resource types
 - Supports both API key and Bearer token authentication
 
 ## Installation
@@ -64,38 +64,38 @@ const client = new N8nClient({
 });
 
 // List workflows
-const { data: workflows, nextCursor } = await client.workflow().list({ limit: 10 });
+const { data: workflows, nextCursor } = await client.workflows().list({ limit: 10 });
 
 // Create a workflow
-const workflow = await client.workflow().create({
+const workflow = await client.workflows().create({
   name: 'My Workflow',
   nodes: [{ name: 'Start', type: 'n8n-nodes-base.start', position: [250, 300] }],
   connections: {},
 });
 
 // Activate it
-await client.workflow().activate(workflow.id);
+await client.workflows().activate(workflow.id);
 
 // List executions
-const { data: executions } = await client.execution().list({ workflowId: workflow.id });
+const { data: executions } = await client.executions().list({ workflowId: workflow.id });
 
 // Create a credential
-const credential = await client.credential().create({
+const credential = await client.credentials().create({
   name: 'My GitHub Token',
   type: 'githubApi',
   data: { accessToken: 'ghp_xxx' },
 });
 
 // Test the credential
-const testResult = await client.credential().test(credential.id);
+const testResult = await client.credentials().test(credential.id);
 
 // Manage tags
-const tag = await client.tag().create({ name: 'production' });
-await client.workflow().updateTags(workflow.id, [{ id: tag.id }]);
+const tag = await client.tags().create({ name: 'production' });
+await client.workflows().updateTags(workflow.id, [{ id: tag.id }]);
 
 // Manage projects
-const projects = await client.project().list();
-await client.project().addMembers(projects.data[0].id, [{ userId: 'user-1', role: 'project:editor' }]);
+const projects = await client.projects().list();
+await client.projects().addMembers(projects.data[0].id, [{ userId: 'user-1', role: 'project:editor' }]);
 
 // Insights
 const summary = await client.insights().getSummary({
@@ -126,12 +126,12 @@ const client = new N8nClient({
 });
 ```
 
-## Resource Handles
+## Resource Clients
 
 ### Workflow
 
 ```ts
-const workflowApi = client.workflow();
+const workflowApi = client.workflows();
 
 // List with filters
 const { data, nextCursor } = await workflowApi.list({
@@ -166,7 +166,7 @@ const version = await workflowApi.getVersion('wf-1', 'v-1');
 ### Execution
 
 ```ts
-const executionApi = client.execution();
+const executionApi = client.executions();
 
 const { data } = await executionApi.list({ status: 'success', workflowId: 'wf-1' });
 const execution = await executionApi.get(1, { includeData: true });
@@ -182,7 +182,7 @@ await executionApi.updateTags(1, [{ id: 'tag-1' }]);
 ### Credential
 
 ```ts
-const credentialApi = client.credential();
+const credentialApi = client.credentials();
 
 const { data } = await credentialApi.list({ limit: 10 });
 const credential = await credentialApi.get('c-1');
@@ -201,7 +201,7 @@ const schema = await credentialApi.getSchema('githubApi');
 ### Tag
 
 ```ts
-const tagApi = client.tag();
+const tagApi = client.tags();
 
 const { data } = await tagApi.list({ limit: 10 });
 const tag = await tagApi.get('t-1');
@@ -213,7 +213,7 @@ await tagApi.delete('t-1');
 ### User
 
 ```ts
-const userApi = client.user();
+const userApi = client.users();
 
 const { data } = await userApi.list({ limit: 10 });
 const user = await userApi.get('u-1');
@@ -225,7 +225,7 @@ await userApi.changeRole('u-1', 'global:admin');
 ### Variable
 
 ```ts
-const variableApi = client.variable();
+const variableApi = client.variables();
 
 const { data } = await variableApi.list({ projectId: 'proj-1' });
 await variableApi.create({ key: 'MY_VAR', value: 'hello', projectId: 'proj-1' });
@@ -236,7 +236,7 @@ await variableApi.delete('v-1');
 ### Project
 
 ```ts
-const projectApi = client.project();
+const projectApi = client.projects();
 
 const { data } = await projectApi.list({ limit: 10 });
 await projectApi.create({ name: 'New Project' });
@@ -253,7 +253,7 @@ await projectApi.removeMember('p-1', 'u-1');
 ### DataTable
 
 ```ts
-const dataTableApi = client.dataTable();
+const dataTableApi = client.dataTables();
 
 const { data } = await dataTableApi.list({ limit: 10 });
 const table = await dataTableApi.get('dt-1');
@@ -281,7 +281,7 @@ await dataTableApi.deleteColumn('dt-1', 'col-1');
 ### Folder
 
 ```ts
-const folderApi = client.folder('proj-1');
+const folderApi = client.folders('proj-1');
 
 const { data } = await folderApi.list({ take: '10' });
 const folder = await folderApi.get('f-1');
@@ -293,7 +293,7 @@ await folderApi.delete('f-1', 'f-2'); // transfer contents to f-2
 ### Community Package
 
 ```ts
-const pkgApi = client.communityPackage();
+const pkgApi = client.communityPackages();
 
 const packages = await pkgApi.list();
 const installed = await pkgApi.install({ name: 'n8n-nodes-foo' });
@@ -340,7 +340,7 @@ const capabilities = await client.discover().get({ include: 'schemas' });
 import { HttpError } from '@egose/n8n-client';
 
 try {
-  await client.workflow().get('nonexistent');
+  await client.workflows().get('nonexistent');
 } catch (error) {
   if (error instanceof HttpError) {
     console.log(error.status); // 404
@@ -356,23 +356,23 @@ Transient errors (408, 429, 5xx) are automatically retried up to 3 times with ex
 
 ### N8nClient
 
-| Method               | Returns                  | Description                                      |
-| -------------------- | ------------------------ | ------------------------------------------------ |
-| `workflow()`         | `WorkflowHandle`         | Workflow CRUD + activate/deactivate/archive/tags |
-| `execution()`        | `ExecutionHandle`        | Execution list/get/delete/retry/stop/tags        |
-| `credential()`       | `CredentialHandle`       | Credential CRUD + test/transfer/schema           |
-| `tag()`              | `TagHandle`              | Tag CRUD                                         |
-| `user()`             | `UserHandle`             | User list/get/create/delete/changeRole           |
-| `variable()`         | `VariableHandle`         | Variable CRUD                                    |
-| `project()`          | `ProjectHandle`          | Project CRUD + member management                 |
-| `dataTable()`        | `DataTableHandle`        | DataTable CRUD + rows/columns                    |
-| `folder(projectId)`  | `FolderHandle`           | Folder CRUD scoped to project                    |
-| `communityPackage()` | `CommunityPackageHandle` | Package install/update/uninstall                 |
-| `audit()`            | `AuditHandle`            | Generate security audit                          |
-| `insights()`         | `InsightsHandle`         | Execution insights summary                       |
-| `sourceControl()`    | `SourceControlHandle`    | Git-based source control pull                    |
-| `discover()`         | `DiscoverHandle`         | API capability discovery                         |
-| `n8nPackage()`       | `N8nPackageHandle`       | Package export/import (beta)                     |
+| Method                | Returns                  | Description                                      |
+| --------------------- | ------------------------ | ------------------------------------------------ |
+| `workflows()`         | `WorkflowClient`         | Workflow CRUD + activate/deactivate/archive/tags |
+| `executions()`        | `ExecutionClient`        | Execution list/get/delete/retry/stop/tags        |
+| `credentials()`       | `CredentialClient`       | Credential CRUD + test/transfer/schema           |
+| `tags()`              | `TagClient`              | Tag CRUD                                         |
+| `users()`             | `UserClient`             | User list/get/create/delete/changeRole           |
+| `variables()`         | `VariableClient`         | Variable CRUD                                    |
+| `projects()`          | `ProjectClient`          | Project CRUD + member management                 |
+| `dataTables()`        | `DataTableClient`        | DataTable CRUD + rows/columns                    |
+| `folders(projectId)`  | `FolderClient`           | Folder CRUD scoped to project                    |
+| `communityPackages()` | `CommunityPackageClient` | Package install/update/uninstall                 |
+| `audit()`             | `AuditClient`            | Generate security audit                          |
+| `insights()`          | `InsightsClient`         | Execution insights summary                       |
+| `sourceControl()`     | `SourceControlClient`    | Git-based source control pull                    |
+| `discover()`          | `DiscoverClient`         | API capability discovery                         |
+| `n8nPackage()`        | `N8nPackageClient`       | Package export/import (beta)                     |
 
 ## Documentation
 

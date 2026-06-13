@@ -1,7 +1,7 @@
 import type { CommunityPackage, InstallCommunityPackageRequest, UpdateCommunityPackageRequest } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class CommunityPackageHandle extends BaseHandle {
+export default class CommunityPackageClient extends BaseClient {
   async list(): Promise<CommunityPackage[]> {
     return this.http.get<CommunityPackage[]>('/community-packages');
   }

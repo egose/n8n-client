@@ -7,9 +7,9 @@ import type {
   UserGetParams,
   UserRoleChangeRequest,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class UserHandle extends BaseHandle {
+export default class UserClient extends BaseClient {
   async list(params?: UserListParams): Promise<UserListResponse> {
     return this.http.get<UserListResponse>('/users', params);
   }

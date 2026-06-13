@@ -7,9 +7,9 @@ import type {
   FolderListResponse,
   FolderUpdate,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class FolderHandle extends BaseHandle {
+export default class FolderClient extends BaseClient {
   private readonly projectId: string;
 
   constructor(http: HttpClient, projectId: string) {

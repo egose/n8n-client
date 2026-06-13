@@ -6,9 +6,9 @@ import type {
   ProjectMemberRelation,
   ProjectMemberRoleChangeRequest,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class ProjectHandle extends BaseHandle {
+export default class ProjectClient extends BaseClient {
   async list(params?: PaginationParams): Promise<ProjectListResponse> {
     return this.http.get<ProjectListResponse>('/projects', params);
   }

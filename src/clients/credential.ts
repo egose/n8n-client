@@ -9,9 +9,9 @@ import type {
   JsonObject,
   PaginationParams,
 } from '../types.js';
-import BaseHandle from './base.js';
+import BaseClient from './base.js';
 
-export default class CredentialHandle extends BaseHandle {
+export default class CredentialClient extends BaseClient {
   async list(params?: PaginationParams): Promise<CredentialListResponse> {
     return this.http.get<CredentialListResponse>('/credentials', params);
   }
