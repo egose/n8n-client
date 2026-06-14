@@ -184,4 +184,27 @@ describe('Implementation Consistency: CommunityPackage', () => {
     expect(resource.installedVersion).toBe('2.1.0');
     expect(http.delete).toHaveBeenCalledWith('/community-packages/n8n-nodes-foo');
   });
+
+  test('community package resource patch uses the installed version as the base payload', async () => {
+    const patched = {
+      packageName: 'n8n-nodes-foo',
+      installedVersion: '1.0.0',
+      authorName: '',
+      authorEmail: '',
+      installedNodes: [],
+      createdAt: '',
+      updatedAt: '',
+    };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new CommunityPackageClient(http);
+    const resource = new CommunityPackageResource(handle, patched);
+
+    await resource.patch({ verify: true });
+
+    expect(http.patch).toHaveBeenCalledWith('/community-packages/n8n-nodes-foo', {
+      version: '1.0.0',
+      verify: true,
+    });
+    expect(resource.installedVersion).toBe('1.0.0');
+  });
 });

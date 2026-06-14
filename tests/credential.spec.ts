@@ -257,4 +257,39 @@ describe('Implementation Consistency: Credential', () => {
     expect(resultSchema).toEqual(schema);
     expect(deleted.id).toBe('c-1');
   });
+
+  test('credential resource patch merges writable fields from the current snapshot', async () => {
+    const patched = {
+      id: 'c-1',
+      name: 'Patched',
+      type: 'githubApi',
+      isManaged: false,
+      isGlobal: true,
+      isResolvable: true,
+      createdAt: '',
+      updatedAt: '',
+    };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new CredentialClient(http);
+    const resource = new CredentialResource(handle, {
+      id: 'c-1',
+      name: 'GitHub API',
+      type: 'githubApi',
+      isManaged: false,
+      isGlobal: true,
+      isResolvable: true,
+      createdAt: '',
+      updatedAt: '',
+    });
+
+    await resource.patch({ name: 'Patched' });
+
+    expect(http.patch).toHaveBeenCalledWith('/credentials/c-1', {
+      name: 'Patched',
+      type: 'githubApi',
+      isGlobal: true,
+      isResolvable: true,
+    });
+    expect(resource.name).toBe('Patched');
+  });
 });

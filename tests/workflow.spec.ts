@@ -213,6 +213,52 @@ describe('Implementation Consistency: Workflow', () => {
     expect(resource.isArchived).toBe(true);
   });
 
+  test('workflow resource patch merges partial changes with current workflow data', async () => {
+    const patched = {
+      id: 'wf-1',
+      name: 'Patched',
+      description: 'Original description',
+      active: false,
+      createdAt: '',
+      updatedAt: '',
+      isArchived: false,
+      versionId: 'v2',
+      triggerCount: 0,
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+    };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new WorkflowClient(http);
+    const resource = new WorkflowResource(handle, new ExecutionClient(http), {
+      id: 'wf-1',
+      name: 'Original',
+      description: 'Original description',
+      active: false,
+      createdAt: '',
+      updatedAt: '',
+      isArchived: false,
+      versionId: 'v1',
+      triggerCount: 0,
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+    });
+
+    await resource.patch({ name: 'Patched' });
+
+    expect(http.put).toHaveBeenCalledWith('/workflows/wf-1', {
+      name: 'Patched',
+      description: 'Original description',
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+      staticData: undefined,
+      pinData: undefined,
+    });
+    expect(resource.name).toBe('Patched');
+  });
+
   test('workflow resource execution helpers inject workflowId filter', async () => {
     const http = createMockHttpClient([
       {

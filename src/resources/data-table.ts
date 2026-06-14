@@ -48,6 +48,13 @@ export default class DataTableResource extends BaseResource<DataTable> {
     return this.replaceSnapshot(await this.dataTables.update(this.id, data));
   }
 
+  async patch(data: Partial<UpdateDataTableRequest>): Promise<this> {
+    return this.update({
+      name: this.data.name,
+      ...data,
+    });
+  }
+
   async delete(): Promise<void> {
     await this.dataTables.delete(this.id);
   }

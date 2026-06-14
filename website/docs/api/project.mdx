@@ -116,6 +116,7 @@ const resource = await client.projects().getResource('proj-123');
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `update(data)` | `this` | Update the project — merges into snapshot locally |
+| `patch(data)` | `this` | Convenience update — merges partial fields into the current project snapshot before updating |
 | `delete()` | `void` | Delete the project |
 | `listMembers(params?)` | `ProjectMemberListResponse` | List project members |
 | `addMembers(relations)` | `void` | Add members to the project |
@@ -128,7 +129,7 @@ const resource = await client.projects().getResource('proj-123');
 
 #### `workflows()`
 
-Full workflow CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `createResource`, `update`, `updateResource`. Scope is verified via paginated list for `get`, `getResource`, `update`, and `updateResource`.
+Full workflow CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `createResource`, `update`, `patch`, `updateResource`, `patchResource`. Scope is verified via paginated list for `get`, `getResource`, `update`, `patch`, `updateResource`, and `patchResource`.
 
 ```ts
 const project = await client.projects().getResource('proj-1');
@@ -141,28 +142,31 @@ const created = await project.workflows().createResource({
   connections: {},
   settings: {},
 });
+const patched = await project.workflows().patch('wf-1', { name: 'Renamed' });
 ```
 
 #### `folders()`
 
-Folder CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `createResource`, `update`, `updateResource`, `delete`.
+Folder CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `createResource`, `update`, `patch`, `updateResource`, `patchResource`, `delete`.
 
 ```ts
 const folder = await project.folders().createResource({ name: 'Archive' });
 const updated = await project.folders().updateResource('folder-id', { name: 'Archived' });
+const moved = await project.folders().patchResource('folder-id', { parentFolderId: 'parent-id' });
 ```
 
 #### `variables()`
 
-Variable CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `update`, `updateResource`, `delete`.
+Variable CRUD scoped to this project. Supports `list`, `listResources`, `get`, `getResource`, `create`, `update`, `patch`, `updateResource`, `patchResource`, `delete`.
 
 ```ts
 await project.variables().create({ key: 'API_URL', value: 'https://example.com' });
+await project.variables().patch('var-1', { value: 'https://api.example.com' });
 ```
 
 #### `dataTables()`
 
-Data table CRUD scoped to this project. Supports `get`, `getResource`, `create`, `createResource`, `update`, `updateResource`, `delete`. There is no `list`/`listResources` because the n8n API does not support a `projectId` filter on the list endpoint.
+Data table CRUD scoped to this project. Supports `get`, `getResource`, `create`, `createResource`, `update`, `patch`, `updateResource`, `patchResource`, `delete`. There is no `list`/`listResources` because the n8n API does not support a `projectId` filter on the list endpoint.
 
 ```ts
 const table = await project.dataTables().createResource({
@@ -170,6 +174,7 @@ const table = await project.dataTables().createResource({
   columns: [{ name: 'email', type: 'string' }],
 });
 await table.createColumn({ name: 'active', type: 'boolean' });
+await project.dataTables().patch('table-id', { name: 'Customers' });
 ```
 
 #### `executions()`

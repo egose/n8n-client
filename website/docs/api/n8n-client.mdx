@@ -143,9 +143,11 @@ const project = await client.projects().getResource('proj-1');
 
 const workflow = await project.workflows().get('wf-1');
 const workflowResource = await project.workflows().getResource('wf-1');
+const patchedWorkflow = await project.workflows().patch('wf-1', { name: 'Archive Sync' });
 
 const updatedFolder = await project.folders().update('folder-id', { name: 'Archive' });
 const updatedFolderResource = await project.folders().updateResource('folder-id', { name: 'Archive' });
+const movedFolder = await project.folders().patchResource('folder-id', { parentFolderId: 'new-parent' });
 
 const run = await workflowResource.executions().get(123);
 const runResource = await workflowResource.executions().getResource(123);
@@ -154,7 +156,7 @@ const runResource = await workflowResource.executions().getResource(123);
 Rule of thumb:
 
 - raw nested methods mirror the underlying client/API return type
-- `getResource()` / `createResource()` / `updateResource()` return bound resource instances
+- `getResource()` / `createResource()` / `updateResource()` / `patchResource()` return bound resource instances
 - nested collections only expose the pairs the API can support honestly
 
 Some nested collections are true scoped relationships, while others are filtered or verified convenience relationships:

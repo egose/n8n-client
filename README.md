@@ -149,10 +149,13 @@ await workflows.data[0]?.archive();
 
 const folders = await project.folders().listResources({ take: '10' });
 await folders.data[0]?.update({ name: 'Archived Workflows' });
+await folders.data[0]?.patch({ parentFolderId: 'archive-root' });
 
 const renamedFolder = await project.folders().updateResource('folder-id', { name: 'Archived Workflows' });
+const movedFolder = await project.folders().patchResource('folder-id', { parentFolderId: 'archive-root' });
 
 await project.variables().create({ key: 'API_URL', value: 'https://example.com' });
+await project.variables().patch('var-1', { value: 'https://api.example.com' });
 
 const createdWorkflow = await project.workflows().create({
   name: 'Sync',
@@ -185,6 +188,8 @@ const workflowResource = await project.workflows().getResource('wf-1');
 
 const rawFolder = await project.folders().update('folder-id', { name: 'Archive' });
 const folderResource = await project.folders().updateResource('folder-id', { name: 'Archive' });
+const patchedWorkflow = await project.workflows().patch('wf-1', { name: 'Archive Sync' });
+const patchedWorkflowResource = await project.workflows().patchResource('wf-1', { name: 'Archive Sync v2' });
 ```
 
 The same rule applies at the top-level clients: use `get()` for raw API objects and `getResource()` for bound instances.
@@ -210,6 +215,7 @@ await execution.stop();
 
 const variable = await client.variables().getResource('var-1');
 await variable.update({ key: 'API_URL', value: 'https://example.com' });
+await variable.patch({ value: 'https://api.internal.example.com' });
 
 const dataTable = await client.dataTables().createResource({
   name: 'Users',
@@ -227,6 +233,7 @@ const pkg = await client.communityPackages().installResource({
 });
 
 await pkg.update({ version: '2.0.0' });
+await pkg.patch({ verify: true });
 await pkg.uninstall();
 ```
 
@@ -252,6 +259,7 @@ Rule of thumb:
 - `create()` mirrors the underlying API/client return type
 - `createResource()` returns a bound resource instance when the API returns the created entity
 - `updateResource()` returns a bound resource instance when the updated result can be represented honestly, either from the update response itself or from a verified follow-up fetch
+- `patch()` / `patchResource()` are convenience helpers on bound resources and nested collections that merge your partial fields over the current resource snapshot before calling the underlying update path
 
 `projects().createResource()` is intentionally not available because `POST /projects` returns no entity or identifier.
 
