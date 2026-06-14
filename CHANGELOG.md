@@ -1,3 +1,14 @@
+## [0.3.0](https://github.com/egose/n8n-client/compare/v0.2.1...v0.3.0) (2026-06-14)
+
+### Features
+
+* expand and refine API type definitions ([2437e7b](https://github.com/egose/n8n-client/commit/2437e7b6e425e4900c453574904df7d408530031))
+* **website:** add patch and patchResource for partial updates and improve documentation ([e916523](https://github.com/egose/n8n-client/commit/e916523b32b8c476849b65348983420172b7698b))
+
+### Docs
+
+* add JSDoc to N8nClient and create coding agent guide ([28013b1](https://github.com/egose/n8n-client/commit/28013b127c4afe2c63e7c78e12a7d2f1ce02cb47))
+
 ## [0.2.1](https://github.com/egose/n8n-client/compare/v0.2.0...v0.2.1) (2026-06-14)
 
 ### Docs
