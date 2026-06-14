@@ -26,6 +26,17 @@ export default class CredentialResource extends BaseResource<Credential | Creden
     return this.replaceSnapshot(await this.credentials.update(this.id, data));
   }
 
+  async patch(data: CredentialUpdate): Promise<this> {
+    return this.update({
+      name: this.data.name,
+      type: this.data.type,
+      ...('data' in this.data && this.data.data ? { data: this.data.data } : {}),
+      ...('isGlobal' in this.data ? { isGlobal: this.data.isGlobal } : {}),
+      ...(this.data.isResolvable !== undefined ? { isResolvable: this.data.isResolvable } : {}),
+      ...data,
+    });
+  }
+
   async delete(): Promise<Credential> {
     return this.credentials.delete(this.id);
   }

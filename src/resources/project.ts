@@ -46,7 +46,9 @@ export interface ProjectWorkflowResourceCollection {
   createResource(data: Omit<WorkflowCreate, 'projectId'>): Promise<WorkflowResource>;
   create(data: Omit<WorkflowCreate, 'projectId'>): Promise<import('../types.js').Workflow>;
   update(id: string, data: import('../types.js').WorkflowUpdate): Promise<import('../types.js').Workflow>;
+  patch(id: string, data: Partial<import('../types.js').WorkflowUpdate>): Promise<import('../types.js').Workflow>;
   updateResource(id: string, data: import('../types.js').WorkflowUpdate): Promise<WorkflowResource>;
+  patchResource(id: string, data: Partial<import('../types.js').WorkflowUpdate>): Promise<WorkflowResource>;
 }
 
 export interface ProjectFolderResourceCollection {
@@ -57,7 +59,9 @@ export interface ProjectFolderResourceCollection {
   create(data: FolderCreate): Promise<import('../types.js').Folder>;
   get(id: string): Promise<FolderDetail>;
   update(id: string, data: FolderUpdate): Promise<import('../types.js').Folder>;
+  patch(id: string, data: FolderUpdate): Promise<import('../types.js').Folder | FolderDetail>;
   updateResource(id: string, data: FolderUpdate): Promise<FolderResource>;
+  patchResource(id: string, data: FolderUpdate): Promise<FolderResource>;
   delete(id: string, transferToFolderId?: string): Promise<void>;
 }
 
@@ -68,7 +72,9 @@ export interface ProjectVariableResourceCollection {
   getResource(id: string): Promise<VariableResource>;
   create(data: Omit<VariableCreate, 'projectId'>): Promise<void>;
   update(id: string, data: Omit<VariableCreate, 'projectId'>): Promise<void>;
+  patch(id: string, data: Partial<Omit<VariableCreate, 'projectId'>>): Promise<void>;
   updateResource(id: string, data: Omit<VariableCreate, 'projectId'>): Promise<VariableResource>;
+  patchResource(id: string, data: Partial<Omit<VariableCreate, 'projectId'>>): Promise<VariableResource>;
   delete(id: string): Promise<void>;
 }
 
@@ -78,7 +84,9 @@ export interface ProjectDataTableResourceCollection {
   create(data: Omit<CreateDataTableRequest, 'projectId'>): Promise<DataTable>;
   createResource(data: Omit<CreateDataTableRequest, 'projectId'>): Promise<DataTableResource>;
   update(id: string, data: import('../types.js').UpdateDataTableRequest): Promise<DataTable>;
+  patch(id: string, data: Partial<import('../types.js').UpdateDataTableRequest>): Promise<DataTable>;
   updateResource(id: string, data: import('../types.js').UpdateDataTableRequest): Promise<DataTableResource>;
+  patchResource(id: string, data: Partial<import('../types.js').UpdateDataTableRequest>): Promise<DataTableResource>;
   delete(id: string): Promise<void>;
 }
 
@@ -134,6 +142,13 @@ export default class ProjectResource extends BaseResource<Project> {
   async update(data: ProjectMutation): Promise<this> {
     await this.projects.update(this.id, data);
     return this.mergeSnapshot(data);
+  }
+
+  async patch(data: Partial<ProjectMutation>): Promise<this> {
+    return this.update({
+      name: this.data.name,
+      ...data,
+    });
   }
 
   async delete(): Promise<void> {
@@ -201,6 +216,7 @@ export default class ProjectResource extends BaseResource<Project> {
 
         return this.relations.workflows.update(id, data);
       },
+      patch: async (id, data) => (await this.workflows().patchResource(id, data)).data,
       updateResource: async (id, data) => {
         if (
           !(await this.hasResourceInProject({
@@ -212,6 +228,10 @@ export default class ProjectResource extends BaseResource<Project> {
         }
 
         return this.relations.workflows.updateResource(id, data);
+      },
+      patchResource: async (id, data) => {
+        const workflow = await this.workflows().getResource(id);
+        return workflow.patch(data);
       },
     };
   }
@@ -225,7 +245,12 @@ export default class ProjectResource extends BaseResource<Project> {
       create: (data) => this.relations.folders.create(data),
       get: (id) => this.relations.folders.get(id),
       update: (id, data) => this.relations.folders.update(id, data),
+      patch: async (id, data) => (await this.folders().patchResource(id, data)).data,
       updateResource: (id, data) => this.relations.folders.updateResource(id, data),
+      patchResource: async (id, data) => {
+        const folder = await this.relations.folders.getResource(id);
+        return folder.patch(data);
+      },
       delete: (id, transferToFolderId) => this.relations.folders.delete(id, transferToFolderId),
     };
   }
@@ -238,9 +263,16 @@ export default class ProjectResource extends BaseResource<Project> {
       getResource: (id) => this.relations.variables.getResource(id, { projectId: this.id }),
       create: (data) => this.relations.variables.create({ ...data, projectId: this.id }),
       update: (id, data) => this.relations.variables.update(id, { ...data, projectId: this.id }),
+      patch: async (id, data) => {
+        await (await this.variables().getResource(id)).patch(data);
+      },
       updateResource: async (id, data) => {
         await this.relations.variables.update(id, { ...data, projectId: this.id });
         return this.relations.variables.getResource(id, { projectId: this.id });
+      },
+      patchResource: async (id, data) => {
+        const variable = await this.relations.variables.getResource(id, { projectId: this.id });
+        return variable.patch(data);
       },
       delete: (id) => this.relations.variables.delete(id),
     };
@@ -257,9 +289,14 @@ export default class ProjectResource extends BaseResource<Project> {
         await this.getProjectDataTableOrThrow(id);
         return this.relations.dataTables.update(id, data);
       },
+      patch: async (id, data) => (await this.dataTables().patchResource(id, data)).data,
       updateResource: async (id, data) => {
         await this.getProjectDataTableOrThrow(id);
         return this.relations.dataTables.updateResource(id, data);
+      },
+      patchResource: async (id, data) => {
+        const dataTable = await this.dataTables().getResource(id);
+        return dataTable.patch(data);
       },
       delete: async (id) => {
         await this.getProjectDataTableOrThrow(id);

@@ -234,6 +234,7 @@ const created = await client.dataTables().createResource({
 |--------|---------|-------------|
 | `refresh()` | `this` | Re-fetch the table from the API |
 | `update(data)` | `this` | Update the table — replaces snapshot with the API response |
+| `patch(data)` | `this` | Convenience update — merges partial fields into the current table snapshot before updating |
 | `delete()` | `void` | Delete the table |
 
 ### Row methods
@@ -259,7 +260,7 @@ Row methods on the resource mirror the corresponding client methods but with the
 
 ### Snapshot management
 
-`refresh()` and `update()` call `replaceSnapshot()`. Column methods (`createColumn`, `updateColumn`, `deleteColumn`) call `mergeSnapshot()` to patch the `columns` array locally without re-fetching the full table.
+`refresh()`, `update()`, and `patch()` call `replaceSnapshot()`. Column methods (`createColumn`, `updateColumn`, `deleteColumn`) call `mergeSnapshot()` to patch the `columns` array locally without re-fetching the full table.
 
 ### Example
 

@@ -87,6 +87,7 @@ const installed = await client.communityPackages().installResource({
 |--------|---------|-------------|
 | `refresh()` | `this` | Re-fetch the package from the API — resolves by name from list |
 | `update(data?)` | `this` | Update the package — replaces snapshot with the API response |
+| `patch(data?)` | `this` | Convenience update — uses the installed version as the base payload, then merges partial fields over it |
 | `uninstall()` | `void` | Uninstall the package |
 
 ### Note

@@ -173,6 +173,7 @@ const created = await client.workflows().createResource({
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `update(data)` | `this` | Full update — replaces snapshot with the API response |
+| `patch(data)` | `this` | Convenience update — merges partial fields into the current workflow snapshot, then sends a full update body |
 | `delete()` | `Workflow` | Delete the workflow |
 | `activate(data?)` | `this` | Activate the workflow |
 | `deactivate()` | `this` | Deactivate the workflow |
@@ -186,7 +187,7 @@ const created = await client.workflows().createResource({
 
 ### Snapshot management
 
-Mutating methods (`update`, `activate`, `deactivate`, `archive`, `unarchive`) call `replaceSnapshot()` under the hood, so `resource.data` stays current after each call. `updateTags()` calls `mergeSnapshot()` to patch the tags field without re-fetching the full workflow.
+Mutating methods (`update`, `patch`, `activate`, `deactivate`, `archive`, `unarchive`) call `replaceSnapshot()` under the hood, so `resource.data` stays current after each call. `updateTags()` calls `mergeSnapshot()` to patch the tags field without re-fetching the full workflow.
 
 ### Nested executions
 

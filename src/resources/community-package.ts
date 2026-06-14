@@ -26,6 +26,13 @@ export default class CommunityPackageResource extends BaseResource<CommunityPack
     return this.replaceSnapshot(await this.communityPackages.update(this.packageName, data));
   }
 
+  async patch(data?: UpdateCommunityPackageRequest): Promise<this> {
+    return this.update({
+      version: this.data.installedVersion,
+      ...data,
+    });
+  }
+
   async uninstall(): Promise<void> {
     await this.communityPackages.uninstall(this.packageName);
   }

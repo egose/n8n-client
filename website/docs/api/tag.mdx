@@ -75,4 +75,5 @@ const resource = await client.tags().getResource('tag-123');
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `update(data)` | `this` | Update the tag — replaces snapshot with the API response |
+| `patch(data)` | `this` | Convenience update — merges partial fields into the current tag snapshot before updating |
 | `delete()` | `Tag` | Delete the tag |

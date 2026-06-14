@@ -112,4 +112,16 @@ describe('Implementation Consistency: Tag', () => {
     expect(resource.name).toBe('Prod');
     expect(result).toEqual(deleted);
   });
+
+  test('tag resource patch uses current tag name as the base payload', async () => {
+    const patched = { id: 't-1', name: 'Production', createdAt: '', updatedAt: '' };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new TagClient(http);
+    const resource = new TagResource(handle, { id: 't-1', name: 'Production', createdAt: '', updatedAt: '' });
+
+    await resource.patch({});
+
+    expect(http.put).toHaveBeenCalledWith('/tags/t-1', { name: 'Production' });
+    expect(resource.name).toBe('Production');
+  });
 });

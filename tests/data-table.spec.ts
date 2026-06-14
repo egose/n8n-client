@@ -285,4 +285,23 @@ describe('Implementation Consistency: DataTable', () => {
     expect(http.post).toHaveBeenCalledWith('/data-tables/dt-1/columns', { name: 'active', type: 'boolean' });
     expect(http.delete).toHaveBeenCalledWith('/data-tables/dt-1');
   });
+
+  test('data table resource patch uses current table name as the base payload', async () => {
+    const patched = {
+      id: 'dt-1',
+      name: 'Users',
+      columns: [],
+      projectId: 'p-1',
+      createdAt: '',
+      updatedAt: '',
+    };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new DataTableClient(http);
+    const resource = new DataTableResource(handle, patched);
+
+    await resource.patch({});
+
+    expect(http.patch).toHaveBeenCalledWith('/data-tables/dt-1', { name: 'Users' });
+    expect(resource.name).toBe('Users');
+  });
 });

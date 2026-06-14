@@ -32,6 +32,17 @@ export default class VariableResource extends BaseResource<Variable> {
     return this.mergeSnapshot(data);
   }
 
+  async patch(data: Partial<VariableCreate>): Promise<this> {
+    await this.variables.update(this.id, {
+      key: this.data.key,
+      value: this.data.value,
+      ...(this.data.project ? { projectId: this.data.project.id } : {}),
+      ...data,
+    });
+
+    return this.mergeSnapshot(data);
+  }
+
   async delete(): Promise<void> {
     await this.variables.delete(this.id);
   }

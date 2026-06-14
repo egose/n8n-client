@@ -501,14 +501,23 @@ describe('Public API contracts', () => {
     expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['updateResource']>>().toEqualTypeOf<
       Promise<WorkflowResource>
     >();
+    expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['patchResource']>>().toEqualTypeOf<
+      Promise<WorkflowResource>
+    >();
     expectTypeOf<ReturnType<ProjectFolderResourceCollection['getResource']>>().toEqualTypeOf<Promise<FolderResource>>();
     expectTypeOf<ReturnType<ProjectFolderResourceCollection['updateResource']>>().toEqualTypeOf<
+      Promise<FolderResource>
+    >();
+    expectTypeOf<ReturnType<ProjectFolderResourceCollection['patchResource']>>().toEqualTypeOf<
       Promise<FolderResource>
     >();
     expectTypeOf<ReturnType<ProjectVariableResourceCollection['getResource']>>().toEqualTypeOf<
       Promise<VariableResource>
     >();
     expectTypeOf<ReturnType<ProjectVariableResourceCollection['updateResource']>>().toEqualTypeOf<
+      Promise<VariableResource>
+    >();
+    expectTypeOf<ReturnType<ProjectVariableResourceCollection['patchResource']>>().toEqualTypeOf<
       Promise<VariableResource>
     >();
     expectTypeOf<ReturnType<ProjectDataTableResourceCollection['getResource']>>().toEqualTypeOf<
@@ -518,6 +527,9 @@ describe('Public API contracts', () => {
       Promise<DataTableResource>
     >();
     expectTypeOf<ReturnType<ProjectDataTableResourceCollection['updateResource']>>().toEqualTypeOf<
+      Promise<DataTableResource>
+    >();
+    expectTypeOf<ReturnType<ProjectDataTableResourceCollection['patchResource']>>().toEqualTypeOf<
       Promise<DataTableResource>
     >();
     expectTypeOf<ReturnType<ProjectExecutionResourceCollection['getResource']>>().toEqualTypeOf<
@@ -531,18 +543,26 @@ describe('Public API contracts', () => {
     expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['get']>>().toEqualTypeOf<Promise<Workflow>>();
     expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['create']>>().toEqualTypeOf<Promise<Workflow>>();
     expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['update']>>().toEqualTypeOf<Promise<Workflow>>();
+    expectTypeOf<ReturnType<ProjectWorkflowResourceCollection['patch']>>().toEqualTypeOf<Promise<Workflow>>();
     expectTypeOf<ReturnType<ProjectVariableResourceCollection['get']>>().toEqualTypeOf<Promise<Variable>>();
+    expectTypeOf<ReturnType<ProjectVariableResourceCollection['patch']>>().toEqualTypeOf<Promise<void>>();
     expectTypeOf<ReturnType<ProjectFolderResourceCollection['create']>>().toEqualTypeOf<Promise<Folder>>();
     expectTypeOf<ReturnType<ProjectFolderResourceCollection['update']>>().toEqualTypeOf<Promise<Folder>>();
+    expectTypeOf<ReturnType<ProjectFolderResourceCollection['patch']>>().toEqualTypeOf<
+      Promise<Folder | FolderDetail>
+    >();
     expectTypeOf<ReturnType<ProjectDataTableResourceCollection['get']>>().toEqualTypeOf<Promise<DataTable>>();
     expectTypeOf<ReturnType<ProjectDataTableResourceCollection['create']>>().toEqualTypeOf<Promise<DataTable>>();
     expectTypeOf<ReturnType<ProjectDataTableResourceCollection['update']>>().toEqualTypeOf<Promise<DataTable>>();
+    expectTypeOf<ReturnType<ProjectDataTableResourceCollection['patch']>>().toEqualTypeOf<Promise<DataTable>>();
     expectTypeOf<ReturnType<ProjectExecutionResourceCollection['get']>>().toEqualTypeOf<Promise<Execution>>();
     expectTypeOf(project.update({ name: 'Renamed' })).toEqualTypeOf<Promise<ProjectResource>>();
+    expectTypeOf(project.patch({ name: 'Renamed' })).toEqualTypeOf<Promise<ProjectResource>>();
     expectTypeOf(workflow.activate()).toEqualTypeOf<Promise<WorkflowResource>>();
     expectTypeOf(workflow.update({ name: 'Updated', nodes: [], connections: {}, settings: {} })).toEqualTypeOf<
       Promise<WorkflowResource>
     >();
+    expectTypeOf(workflow.patch({ name: 'Updated' })).toEqualTypeOf<Promise<WorkflowResource>>();
   });
 
   test('CredentialResource, FolderResource, TagResource, and UserResource bind single-resource operations', () => {
@@ -572,8 +592,11 @@ describe('Public API contracts', () => {
     });
 
     expectTypeOf(credential.update({ name: 'Renamed' })).toEqualTypeOf<Promise<CredentialResource>>();
+    expectTypeOf(credential.patch({ name: 'Renamed' })).toEqualTypeOf<Promise<CredentialResource>>();
     expectTypeOf(folder.update({ name: 'Renamed' })).toEqualTypeOf<Promise<FolderResource>>();
+    expectTypeOf(folder.patch({ name: 'Renamed' })).toEqualTypeOf<Promise<FolderResource>>();
     expectTypeOf(tag.update({ name: 'Renamed' })).toEqualTypeOf<Promise<TagResource>>();
+    expectTypeOf(tag.patch({ name: 'Renamed' })).toEqualTypeOf<Promise<TagResource>>();
     expectTypeOf(user.changeRole('global:admin')).toEqualTypeOf<Promise<UserResource>>();
   });
 
@@ -602,7 +625,9 @@ describe('Public API contracts', () => {
 
     expectTypeOf(execution.retry()).toEqualTypeOf<Promise<ExecutionResource>>();
     expectTypeOf(variable.update({ key: 'KEY', value: 'NEXT' })).toEqualTypeOf<Promise<VariableResource>>();
+    expectTypeOf(variable.patch({ value: 'NEXT' })).toEqualTypeOf<Promise<VariableResource>>();
     expectTypeOf(dataTable.update({ name: 'Renamed' })).toEqualTypeOf<Promise<DataTableResource>>();
+    expectTypeOf(dataTable.patch({ name: 'Renamed' })).toEqualTypeOf<Promise<DataTableResource>>();
   });
 
   test('CommunityPackageResource binds package-level operations', () => {
@@ -618,6 +643,7 @@ describe('Public API contracts', () => {
     });
 
     expectTypeOf(communityPackage.update({ version: '2.0.0' })).toEqualTypeOf<Promise<CommunityPackageResource>>();
+    expectTypeOf(communityPackage.patch({ version: '2.0.0' })).toEqualTypeOf<Promise<CommunityPackageResource>>();
   });
 
   test('resources expose toObject() and keep toJSON() as an alias', () => {

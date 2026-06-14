@@ -121,4 +121,19 @@ describe('Implementation Consistency: Folder', () => {
     expect(resource.name).toBe('Renamed');
     expect(http.delete).toHaveBeenCalledWith('/projects/proj-1/folders/f-1', { transferToFolderId: 'f-2' });
   });
+
+  test('folder resource patch merges partial changes with the current folder data', async () => {
+    const patched = { id: 'f-1', name: 'Old', parentFolderId: 'parent-1', createdAt: '', updatedAt: '' };
+    const http = createMockHttpClient([{ body: patched }]);
+    const handle = new FolderClient(http, 'proj-1');
+    const resource = new FolderResource(handle, { id: 'f-1', name: 'Old', createdAt: '', updatedAt: '' });
+
+    await resource.patch({ parentFolderId: 'parent-1' });
+
+    expect(http.patch).toHaveBeenCalledWith('/projects/proj-1/folders/f-1', {
+      name: 'Old',
+      parentFolderId: 'parent-1',
+    });
+    expect(resource.parentFolderId).toBe('parent-1');
+  });
 });

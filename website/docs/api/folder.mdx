@@ -111,4 +111,5 @@ const created = await client.folders('proj-123').createResource({ name: 'Archive
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `update(data)` | `this` | Update the folder — replaces snapshot with the API response |
+| `patch(data)` | `this` | Convenience update — merges partial fields into the current folder snapshot before updating |
 | `delete(transferToFolderId?)` | `void` | Delete the folder, optionally moving contents to another folder |

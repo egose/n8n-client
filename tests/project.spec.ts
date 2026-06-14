@@ -264,6 +264,65 @@ describe('Implementation Consistency: Project', () => {
     expect(updatedResource).toBeInstanceOf(WorkflowResource);
   });
 
+  test('project resource workflow patch helpers merge partial changes', async () => {
+    const workflow = {
+      id: 'wf-1',
+      name: 'One',
+      description: 'Original',
+      active: false,
+      createdAt: '',
+      updatedAt: '',
+      isArchived: false,
+      versionId: 'v1',
+      triggerCount: 0,
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+    };
+    const http = createMockHttpClient([
+      { body: { data: [workflow], nextCursor: undefined } },
+      { body: workflow },
+      { body: { ...workflow, name: 'Patched', versionId: 'v2' } },
+      { body: { data: [{ ...workflow, name: 'Patched', versionId: 'v2' }], nextCursor: undefined } },
+      { body: { ...workflow, name: 'Patched', versionId: 'v2' } },
+      { body: { ...workflow, name: 'Patched Again', versionId: 'v3' } },
+    ]);
+    const resource = new ProjectResource(
+      new ProjectClient(http),
+      new WorkflowClient(http),
+      new FolderClient(http, 'p-1'),
+      new VariableClient(http),
+      new DataTableClient(http),
+      new ExecutionClient(http),
+      { id: 'p-1', name: 'Project One' },
+    );
+
+    const patched = await resource.workflows().patch('wf-1', { name: 'Patched' });
+    const patchedResource = await resource.workflows().patchResource('wf-1', { name: 'Patched Again' });
+
+    expect(http.put).toHaveBeenNthCalledWith(1, '/workflows/wf-1', {
+      name: 'Patched',
+      description: 'Original',
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+      staticData: undefined,
+      pinData: undefined,
+    });
+    expect(http.put).toHaveBeenNthCalledWith(2, '/workflows/wf-1', {
+      name: 'Patched Again',
+      description: 'Original',
+      nodes: [],
+      connections: {},
+      settings: { executionOrder: 'v1' },
+      staticData: undefined,
+      pinData: undefined,
+    });
+    expect(patched.name).toBe('Patched');
+    expect(patchedResource).toBeInstanceOf(WorkflowResource);
+    expect(patchedResource.name).toBe('Patched Again');
+  });
+
   test('project resource update mutates local snapshot', async () => {
     const http = createMockHttpClient([{ body: undefined }]);
     const handle = new ProjectClient(http);
@@ -284,6 +343,28 @@ describe('Implementation Consistency: Project', () => {
 
     expect(resource.name).toBe('New Name');
     expect(resource.data).toEqual({ id: 'p-1', name: 'New Name' });
+  });
+
+  test('project resource patch uses current resource data as the base payload', async () => {
+    const http = createMockHttpClient([{ body: undefined }]);
+    const handle = new ProjectClient(http);
+    const resource = new ProjectResource(
+      handle,
+      new WorkflowClient(http),
+      new FolderClient(http, 'p-1'),
+      new VariableClient(http),
+      new DataTableClient(http),
+      new ExecutionClient(http),
+      {
+        id: 'p-1',
+        name: 'Existing Name',
+      },
+    );
+
+    await resource.patch({});
+
+    expect(http.put).toHaveBeenCalledWith('/projects/p-1', { name: 'Existing Name' });
+    expect(resource.name).toBe('Existing Name');
   });
 
   test('project resource folder helpers use project-scoped folder client', async () => {
@@ -330,6 +411,39 @@ describe('Implementation Consistency: Project', () => {
     expect(fetched).toBeInstanceOf(FolderResource);
     expect(updated.id).toBe('f-5');
     expect(updatedResource).toBeInstanceOf(FolderResource);
+  });
+
+  test('project resource folder patch helpers merge partial changes', async () => {
+    const http = createMockHttpClient([
+      { body: { id: 'f-1', name: 'Folder One', parentFolderId: 'parent-1', createdAt: '', updatedAt: '' } },
+      { body: { id: 'f-1', name: 'Folder One', parentFolderId: 'parent-2', createdAt: '', updatedAt: '' } },
+      { body: { id: 'f-1', name: 'Folder One', parentFolderId: 'parent-2', createdAt: '', updatedAt: '' } },
+      { body: { id: 'f-1', name: 'Folder Renamed', parentFolderId: 'parent-2', createdAt: '', updatedAt: '' } },
+    ]);
+    const resource = new ProjectResource(
+      new ProjectClient(http),
+      new WorkflowClient(http),
+      new FolderClient(http, 'p-1'),
+      new VariableClient(http),
+      new DataTableClient(http),
+      new ExecutionClient(http),
+      { id: 'p-1', name: 'Project One' },
+    );
+
+    const patched = await resource.folders().patch('f-1', { parentFolderId: 'parent-2' });
+    const patchedResource = await resource.folders().patchResource('f-1', { name: 'Folder Renamed' });
+
+    expect(http.patch).toHaveBeenNthCalledWith(1, '/projects/p-1/folders/f-1', {
+      name: 'Folder One',
+      parentFolderId: 'parent-2',
+    });
+    expect(http.patch).toHaveBeenNthCalledWith(2, '/projects/p-1/folders/f-1', {
+      name: 'Folder Renamed',
+      parentFolderId: 'parent-2',
+    });
+    expect(patched.parentFolderId).toBe('parent-2');
+    expect(patchedResource).toBeInstanceOf(FolderResource);
+    expect(patchedResource.name).toBe('Folder Renamed');
   });
 
   test('project resource variable helpers inject projectId filter', async () => {
@@ -400,6 +514,32 @@ describe('Implementation Consistency: Project', () => {
     expect(updatedResource.value).toBe('three');
   });
 
+  test('project resource variable patch helpers merge partial changes', async () => {
+    const http = createMockHttpClient([
+      { body: { data: [{ id: 'v-1', key: 'FIRST', value: 'one' }], nextCursor: undefined } },
+      { body: undefined },
+      { body: { data: [{ id: 'v-1', key: 'FIRST', value: 'one' }], nextCursor: undefined } },
+      { body: undefined },
+    ]);
+    const resource = new ProjectResource(
+      new ProjectClient(http),
+      new WorkflowClient(http),
+      new FolderClient(http, 'p-1'),
+      new VariableClient(http),
+      new DataTableClient(http),
+      new ExecutionClient(http),
+      { id: 'p-1', name: 'Project One' },
+    );
+
+    await resource.variables().patch('v-1', { value: 'two' });
+    const patchedResource = await resource.variables().patchResource('v-1', { value: 'three' });
+
+    expect(http.put).toHaveBeenNthCalledWith(1, '/variables/v-1', { key: 'FIRST', value: 'two' });
+    expect(http.put).toHaveBeenNthCalledWith(2, '/variables/v-1', { key: 'FIRST', value: 'three' });
+    expect(patchedResource).toBeInstanceOf(VariableResource);
+    expect(patchedResource.value).toBe('three');
+  });
+
   test('project resource data table creation injects projectId', async () => {
     const http = createMockHttpClient([
       { body: { id: 'dt-3', name: 'Three', columns: [], projectId: 'p-1', createdAt: '', updatedAt: '' } },
@@ -464,6 +604,34 @@ describe('Implementation Consistency: Project', () => {
     expect(dataTable.id).toBe('dt-1');
     expect(updated.name).toBe('Updated Again');
     expect(updatedResource).toBeInstanceOf(DataTableResource);
+  });
+
+  test('project resource data table patch helpers merge partial changes', async () => {
+    const table = { id: 'dt-1', name: 'One', columns: [], projectId: 'p-1', createdAt: '', updatedAt: '' };
+    const http = createMockHttpClient([
+      { body: table },
+      { body: { ...table, name: 'Patched' } },
+      { body: table },
+      { body: { ...table, name: 'Patched Resource' } },
+    ]);
+    const resource = new ProjectResource(
+      new ProjectClient(http),
+      new WorkflowClient(http),
+      new FolderClient(http, 'p-1'),
+      new VariableClient(http),
+      new DataTableClient(http),
+      new ExecutionClient(http),
+      { id: 'p-1', name: 'Project One' },
+    );
+
+    const patched = await resource.dataTables().patch('dt-1', {});
+    const patchedResource = await resource.dataTables().patchResource('dt-1', { name: 'Patched Resource' });
+
+    expect(http.patch).toHaveBeenNthCalledWith(1, '/data-tables/dt-1', { name: 'One' });
+    expect(http.patch).toHaveBeenNthCalledWith(2, '/data-tables/dt-1', { name: 'Patched Resource' });
+    expect(patched.name).toBe('Patched');
+    expect(patchedResource).toBeInstanceOf(DataTableResource);
+    expect(patchedResource.name).toBe('Patched Resource');
   });
 
   test('project resource execution helpers inject projectId filter', async () => {

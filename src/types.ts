@@ -41,7 +41,10 @@ export type N8nClientConfig = {
 );
 
 /**
- * Error thrown by the client for non-2xx HTTP responses.
+ * Error shape used by the client for non-2xx HTTP responses.
+ *
+ * The runtime class thrown by HTTP operations is `HttpError`; this interface
+ * describes the compatible `{ status, data, message }` shape.
  *
  * @property status - HTTP status code
  * @property data - Raw error response body from the n8n API
@@ -131,7 +134,7 @@ export interface WorkflowCreate {
   name: string;
   /** Optional description. */
   description?: string;
-  /** Array of workflow nodes (steps). At minimum, include a start node. */
+  /** Array of workflow nodes (steps). Include the trigger/start nodes your workflow needs. */
   nodes: WorkflowNode[];
   /** Node connection graph — maps source nodes to their output connections. */
   connections: WorkflowConnections;
@@ -182,7 +185,7 @@ export interface WorkflowUpdate {
  * Workflow-level execution settings.
  *
  * All fields are optional. Common patterns:
- * - `executionOrder: 'v1'` — required for new workflows
+ * - `executionOrder: 'v1'` — common for new workflows
  * - `errorWorkflow: 'wf-id'` — workflow to run on execution failure
  * - `timezone: 'America/New_York'` — override instance timezone
  */
@@ -201,7 +204,7 @@ export interface WorkflowSettings {
   errorWorkflow?: string;
   /** Workflow timezone (e.g. `'America/New_York'`). */
   timezone?: string;
-  /** Execution order — use `'v1'` for new workflows. */
+  /** Execution order — `'v1'` is a common default for new workflows. */
   executionOrder?: string;
   /** Which workflows can call this one: `'any'`, `'none'`, `'workflowsFromAList'`, `'workflowsFromSameOwner'`. */
   callerPolicy?: 'any' | 'none' | 'workflowsFromAList' | 'workflowsFromSameOwner';
@@ -641,38 +644,63 @@ export interface UserRoleChangeRequest {
 
 // ─── Variable ────────────────────────────────────────────────────────────────
 
+/**
+ * Environment variable stored in n8n.
+ *
+ * Variables are project-scoped when `project` is present. Note that the n8n
+ * API does not expose `GET /variables/{id}`, so client lookups by ID are
+ * implemented as paginated searches.
+ */
 export interface Variable {
+  /** Unique variable identifier. */
   id: string;
+  /** Variable key name (e.g. `API_URL`). */
   key: string;
+  /** Variable value as stored by n8n. */
   value: string;
+  /** Optional variable type metadata from the API. */
   type?: string;
+  /** Owning project, when included by the API response. */
   project?: Project;
 }
 
+/** Payload for creating or replacing a variable. */
 export interface VariableCreate {
+  /** Variable key name (e.g. `API_URL`). */
   key: string;
+  /** Variable value. */
   value: string;
+  /** Target project ID. */
   projectId?: string;
 }
 
+/** Cursor-paginated variable list response. */
 export interface VariableListResponse {
   data: Variable[];
   nextCursor?: string;
 }
 
+/** Filters for listing variables. */
 export interface VariableListParams extends PaginationParams {
+  /** Restrict results to a specific project. */
   projectId?: string;
+  /** Filter to variables with empty values. */
   state?: 'empty';
 }
 
 // ─── Project ─────────────────────────────────────────────────────────────────
 
+/** n8n project visible to the authenticated caller. */
 export interface Project {
+  /** Unique project identifier. */
   id: string;
+  /** Display name. */
   name: string;
+  /** Optional project type from the API. */
   type?: string;
 }
 
+/** Member of a project with the resolved project role. */
 export interface ProjectMember {
   id: string;
   email: string;
@@ -683,48 +711,64 @@ export interface ProjectMember {
   role: string;
 }
 
+/** Cursor-paginated project list response. */
 export interface ProjectListResponse {
   data: Project[];
   nextCursor?: string;
 }
 
+/** Cursor-paginated project member list response. */
 export interface ProjectMemberListResponse {
   data: ProjectMember[];
   nextCursor?: string;
 }
 
+/** Payload for creating or renaming a project. */
 export interface ProjectMutation {
+  /** Project display name. */
   name: string;
 }
 
+/** Member assignment used when adding users to a project. */
 export interface ProjectMemberRelation {
+  /** User ID to add to the project. */
   userId: string;
+  /** Project role name (e.g. `project:editor`). */
   role: string;
 }
 
+/** Payload for changing an existing member role in a project. */
 export interface ProjectMemberRoleChangeRequest {
   role: string;
 }
 
 // ─── DataTable ───────────────────────────────────────────────────────────────
 
+/** A data table owned by a project. */
 export interface DataTable {
+  /** Unique data table identifier. */
   id: string;
+  /** Display name. */
   name: string;
+  /** Current table columns. */
   columns: DataTableColumn[];
+  /** Owning project ID. */
   projectId: string;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Column metadata within a data table. */
 export interface DataTableColumn {
   id: string;
   name: string;
   dataTableId: string;
+  /** Column type returned by the current public API. */
   type: 'string' | 'number' | 'boolean' | 'date';
   index: number;
 }
 
+/** Single row in a data table. Additional fields are dynamic column values. */
 export interface DataTableRow {
   id: number;
   createdAt?: string;
@@ -732,40 +776,57 @@ export interface DataTableRow {
   [key: string]: JsonValue | undefined;
 }
 
+/**
+ * Payload for creating a data table.
+ *
+ * The create API accepts a broader set of column types than the read response,
+ * including `json`.
+ */
 export interface CreateDataTableRequest {
+  /** Table name. */
   name: string;
+  /** Initial columns to create. */
   columns: Array<{ name: string; type: 'string' | 'number' | 'boolean' | 'date' | 'json' }>;
+  /** Target project ID. */
   projectId?: string;
 }
 
+/** Payload for renaming a data table. */
 export interface UpdateDataTableRequest {
   name: string;
 }
 
+/** Payload for adding a new column to a data table. */
 export interface CreateColumnRequest {
   name: string;
   type: 'string' | 'number' | 'boolean' | 'date';
+  /** Optional insertion index. */
   index?: number;
 }
 
+/** Payload for updating a column name or order. */
 export interface UpdateColumnRequest {
   name?: string;
   index?: number;
 }
 
+/** Filters for listing data tables. */
 export interface DataTableListParams extends PaginationParams {
   filter?: string;
   sortBy?: string;
 }
 
+/** Filters for listing rows within a data table. */
 export interface DataTableRowListParams extends PaginationParams {
   filter?: string;
   sortBy?: string;
   search?: string;
 }
 
+/** Base payload for inserting rows into a data table. */
 export interface InsertRowsRequest {
   data: JsonObject[];
+  /** Determines whether the API returns counts, row IDs, or full rows. */
   returnType?: 'count' | 'id' | 'all';
 }
 
@@ -861,6 +922,7 @@ export interface DataTableListResponse {
   nextCursor?: string;
 }
 
+/** Cursor-paginated data table row list response. */
 export interface DataTableRowListResponse {
   data: DataTableRow[];
   nextCursor?: string;
@@ -868,34 +930,41 @@ export interface DataTableRowListResponse {
 
 // ─── Folder ──────────────────────────────────────────────────────────────────
 
+/** Project-scoped folder used to organize workflows. */
 export interface Folder {
   id: string;
   name: string;
+  /** Parent folder ID when nested. */
   parentFolderId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Payload for creating a folder. */
 export interface FolderCreate {
   name: string;
   parentFolderId?: string;
 }
 
+/** Partial update payload for a folder. */
 export interface FolderUpdate {
   name?: string;
   parentFolderId?: string;
 }
 
+/** Folder list response for project-scoped folder endpoints. */
 export interface FolderListResponse {
   count: number;
   data: Folder[];
 }
 
+/** Extended folder response with aggregate counts. */
 export interface FolderDetail extends Folder {
   totalSubFolders?: number;
   totalWorkflows?: number;
 }
 
+/** Filters for listing folders inside a project. */
 export interface FolderListParams extends PaginationParams {
   filter?: string;
   select?: string;
@@ -906,6 +975,7 @@ export interface FolderListParams extends PaginationParams {
 
 // ─── Community Package ───────────────────────────────────────────────────────
 
+/** Installed n8n community package. */
 export interface CommunityPackage {
   packageName: string;
   installedVersion: string;
@@ -918,18 +988,21 @@ export interface CommunityPackage {
   failedLoading?: boolean;
 }
 
+/** Single node contributed by a community package. */
 export interface CommunityPackageNode {
   name: string;
   type: string;
   latestVersion: number;
 }
 
+/** Payload for installing a community package. */
 export interface InstallCommunityPackageRequest {
   name: string;
   version?: string;
   verify?: boolean;
 }
 
+/** Payload for updating an installed community package. */
 export interface UpdateCommunityPackageRequest {
   version?: string;
   verify?: boolean;

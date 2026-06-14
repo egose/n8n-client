@@ -33,6 +33,7 @@ N8nClient
   ├── workflows()      → WorkflowClient
   │     ├── list(), get(), create(), update(), delete()
   │     ├── getResource(), listResources(), createResource(), updateResource()
+  │     ├── bound resources also support patch() where update() exists
   │     └── activate(), deactivate(), archive(), transfer(), getTags(), ...
   ├── executions()     → ExecutionClient
   ├── credentials()    → CredentialClient
@@ -59,6 +60,8 @@ N8nClient
 
 - `list()`, `get()`, `create()`, `update()`, `delete()` — return plain API DTOs
 - `listResources()`, `getResource()`, `createResource()`, `updateResource()` — return bound `*Resource` instances
+- `patch()` on bound resources merges partial fields over the current snapshot before calling the underlying update path
+- `patchResource()` exists on project-scoped nested collections where `updateResource()` exists
 - Resource instances have methods like `activate()`, `refresh()`, `delete()` that update the local snapshot
 
 ## Key Gotchas
@@ -149,7 +152,8 @@ await client.request<T>({ method: 'GET', path: '/path', query: {}, headers: {} }
 ```bash
 pnpm test          # all tests
 pnpm typecheck     # type-check src + tests
-pnpm build         # compile to dist/
+pnpm build         # compile TypeScript to build/
+pnpm bundle        # generate publishable dist/ artifacts + declarations
 ```
 
 ## File Structure
@@ -164,5 +168,5 @@ src/
   resources/        — 10 resource instance classes + BaseResource
   utils/retry.ts    — Exponential backoff
 tests/
-  *.spec.ts         — 20 test files, 241 tests
+  *.spec.ts         — 20 test files, 253 tests
 ```

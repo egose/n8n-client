@@ -56,6 +56,19 @@ export default class WorkflowResource extends BaseResource<Workflow> {
     return this.replaceSnapshot(await this.workflows.update(this.id, data));
   }
 
+  async patch(data: Partial<WorkflowUpdate>): Promise<this> {
+    return this.update({
+      name: this.data.name,
+      description: this.data.description,
+      nodes: this.data.nodes,
+      connections: this.data.connections,
+      settings: this.data.settings ?? {},
+      staticData: this.data.staticData,
+      pinData: this.data.pinData,
+      ...data,
+    });
+  }
+
   async delete(): Promise<Workflow> {
     return this.workflows.delete(this.id);
   }

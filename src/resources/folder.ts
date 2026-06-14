@@ -26,6 +26,14 @@ export default class FolderResource extends BaseResource<Folder | FolderDetail> 
     return this.replaceSnapshot(await this.folders.update(this.id, data));
   }
 
+  async patch(data: FolderUpdate): Promise<this> {
+    return this.update({
+      name: this.data.name,
+      parentFolderId: this.data.parentFolderId,
+      ...data,
+    });
+  }
+
   async delete(transferToFolderId?: string): Promise<void> {
     await this.folders.delete(this.id, transferToFolderId);
   }
