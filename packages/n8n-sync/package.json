@@ -21,13 +21,6 @@
     "test": "vitest run --no-cache --config vitest.config.ts"
   },
   "type": "module",
-  "files": [
-    "dist",
-    "!dist/**/*.map",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
-  ],
   "exports": {
     "./publisher": {
       "require": "./dist/publisher.cjs"
