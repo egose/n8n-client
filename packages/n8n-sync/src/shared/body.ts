@@ -10,17 +10,41 @@ export class BodyParseError extends Error {
   }
 }
 
-type BodyCarrier = IncomingMessage & { body?: unknown };
+type BodyCarrier = IncomingMessage & {
+  /** Set when an upstream middleware already parsed the body (n8n's bodyParser). */
+  body?: unknown;
+  /** Set by n8n's global rawBodyReader middleware — the exact request bytes. */
+  rawBody?: Buffer | string;
+};
+
+export interface JsonBody {
+  /** Exact request bytes (or best available reconstruction) — used for HMAC verification. */
+  raw: string;
+  /** Parsed JSON payload. */
+  parsed: unknown;
+}
 
 /**
- * Read and parse a JSON request body without any framework dependency.
+ * Read a JSON request body without any framework dependency, preserving the
+ * raw bytes for signature verification.
  *
- * If an upstream middleware (e.g. n8n's own body parser) already parsed the
- * body, the parsed value is returned as-is. Otherwise the raw request stream
- * is collected with a size cap and parsed.
+ * Resolution order:
+ *   1. `req.rawBody` — set by n8n's global rawBodyReader middleware
+ *   2. the raw request stream, collected with a size cap
+ *   3. `JSON.stringify(req.body)` — last resort when only a pre-parsed body exists
  */
-export async function readJsonBody(req: BodyCarrier, maxBytes: number): Promise<unknown> {
-  if (req.body !== undefined && req.body !== null) return req.body;
+export async function readJsonBody(req: BodyCarrier, maxBytes: number): Promise<JsonBody> {
+  if (req.rawBody !== undefined) {
+    const raw = Buffer.isBuffer(req.rawBody) ? req.rawBody.toString('utf8') : req.rawBody;
+    if (raw.length > maxBytes) {
+      throw new BodyParseError('Request body too large', 413);
+    }
+    return { raw, parsed: parse(raw) };
+  }
+
+  if (req.body !== undefined && req.body !== null) {
+    return { raw: JSON.stringify(req.body), parsed: req.body };
+  }
 
   const chunks: Buffer[] = [];
   let size = 0;
@@ -35,6 +59,10 @@ export async function readJsonBody(req: BodyCarrier, maxBytes: number): Promise<
   }
 
   const raw = Buffer.concat(chunks).toString('utf8');
+  return { raw, parsed: parse(raw) };
+}
+
+function parse(raw: string): unknown {
   if (!raw) {
     throw new BodyParseError('Request body is empty', 400);
   }

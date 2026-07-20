@@ -1,4 +1,10 @@
-import { SYNC_APPLY_ACTIVE_STATE, SYNC_ROUTE_BASE, SYNC_SHARED_SECRET, SYNC_TARGET_PROJECT_ID } from '../shared/config';
+import {
+  SYNC_APPLY_ACTIVE_STATE,
+  SYNC_AUTH_MODE,
+  SYNC_ROUTE_BASE,
+  SYNC_SHARED_SECRET,
+  SYNC_TARGET_PROJECT_ID,
+} from '../shared/config';
 import { createLogger } from '../shared/logger';
 import { createApplier } from './applier';
 import { createSubscriberHooks } from './hooks';
@@ -23,10 +29,10 @@ function createHookConfig() {
         log,
       });
 
-      const handler = createSyncRouteHandler({ secret: SYNC_SHARED_SECRET, apply, log });
+      const handler = createSyncRouteHandler({ secret: SYNC_SHARED_SECRET, apply, log, authMode: SYNC_AUTH_MODE });
       mountSyncRoutes(server.app, handler, SYNC_ROUTE_BASE);
 
-      log.info('n8n-sync subscriber routes active.', { routeBase: SYNC_ROUTE_BASE });
+      log.info('n8n-sync subscriber routes active.', { routeBase: SYNC_ROUTE_BASE, authMode: SYNC_AUTH_MODE });
     },
   });
 }

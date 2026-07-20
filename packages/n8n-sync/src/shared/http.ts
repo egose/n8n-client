@@ -1,8 +1,12 @@
+import {
+  signPayload,
+  SYNC_SIGNATURE_HEADER,
+  SYNC_TIMESTAMP_HEADER,
+  SYNC_TOKEN_HEADER,
+  type SyncAuthMode,
+} from './auth';
 import type { Logger } from './logger';
 import type { SyncEvent } from './types';
-
-/** HTTP header carrying the shared secret on publisher → subscriber requests. */
-export const SYNC_TOKEN_HEADER = 'x-sync-token';
 
 const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 const MAX_BACKOFF_MS = 10_000;
@@ -25,6 +29,8 @@ export class SyncSendError extends Error {
 export interface SendSyncEventOptions {
   url: string;
   token: string;
+  /** Authentication scheme to sign requests with (default: 'hmac'). */
+  authMode?: SyncAuthMode;
   /** Per-attempt timeout in milliseconds (default: 10000). */
   timeoutMs?: number;
   /** Total attempts including the first one (default: 3). */
@@ -34,6 +40,8 @@ export interface SendSyncEventOptions {
   fetchImpl?: typeof fetch;
   /** Injectable for tests. */
   sleep?: (ms: number) => Promise<void>;
+  /** Injectable for tests — used to timestamp hmac signatures. */
+  nowMs?: () => number;
 }
 
 function defaultSleep(ms: number): Promise<void> {
@@ -48,12 +56,33 @@ function backoffMs(attempt: number): number {
  * POST a sync event to the subscriber with exponential backoff
  * (1s, 2s, 4s, … capped at 10s). Network errors, timeouts and 408/429/5xx
  * responses are retried; other 4xx responses throw immediately.
+ *
+ * In hmac mode every attempt re-signs the body with a fresh timestamp so
+ * long retry chains never trip the subscriber's signature tolerance window.
  */
 export async function sendSyncEvent(event: SyncEvent, options: SendSyncEventOptions): Promise<void> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const sleep = options.sleep ?? defaultSleep;
   const timeoutMs = options.timeoutMs ?? 10_000;
   const attempts = Math.max(1, options.maxRetries ?? 3);
+  const authMode = options.authMode ?? 'hmac';
+  const nowMs = options.nowMs ?? (() => Date.now());
+  const body = JSON.stringify(event);
+
+  const buildHeaders = (): Record<string, string> => {
+    if (authMode === 'token') {
+      return {
+        'content-type': 'application/json',
+        [SYNC_TOKEN_HEADER]: options.token,
+      };
+    }
+    const timestamp = String(nowMs());
+    return {
+      'content-type': 'application/json',
+      [SYNC_TIMESTAMP_HEADER]: timestamp,
+      [SYNC_SIGNATURE_HEADER]: signPayload(options.token, timestamp, body),
+    };
+  };
 
   let lastError: unknown;
 
@@ -66,11 +95,8 @@ export async function sendSyncEvent(event: SyncEvent, options: SendSyncEventOpti
       try {
         response = await fetchImpl(options.url, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            [SYNC_TOKEN_HEADER]: options.token,
-          },
-          body: JSON.stringify(event),
+          headers: buildHeaders(),
+          body,
           signal: controller.signal,
         });
       } finally {

@@ -3,6 +3,7 @@ import { Readable } from 'node:stream';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { signPayload } from '../src/shared/auth';
 import type { Logger } from '../src/shared/logger';
 import type { SyncEvent } from '../src/shared/types';
 import { createSubscriberHooks } from '../src/subscriber/hooks';
@@ -25,9 +26,27 @@ const validEvent: SyncEvent = {
   workflowId: 'wf-1',
 };
 
-function makeReq(body: unknown, token?: string): IncomingMessage & { body?: unknown } {
-  const req = Readable.from(body === undefined ? [] : [JSON.stringify(body)]) as IncomingMessage & { body?: unknown };
-  req.headers = token === undefined ? {} : { 'x-sync-token': token };
+type TestReq = IncomingMessage & { body?: unknown; rawBody?: Buffer | string };
+
+function makeSignedReq(body: unknown, secret: string, timestamp = String(Date.now())): TestReq {
+  const raw = JSON.stringify(body);
+  const req = Readable.from([raw]) as TestReq;
+  req.headers = {
+    'x-sync-timestamp': timestamp,
+    'x-sync-signature': signPayload(secret, timestamp, raw),
+  };
+  return req;
+}
+
+function makeTokenReq(body: unknown, token: string): TestReq {
+  const req = Readable.from([JSON.stringify(body)]) as TestReq;
+  req.headers = { 'x-sync-token': token };
+  return req;
+}
+
+function makeRawReq(raw: string, headers: Record<string, string>): TestReq {
+  const req = Readable.from([raw]) as TestReq;
+  req.headers = headers;
   return req;
 }
 
@@ -40,15 +59,38 @@ function makeRes() {
   return res;
 }
 
-describe('createSyncRouteHandler', () => {
+describe('createSyncRouteHandler (hmac mode, default)', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('rejects requests without a valid token with 401', async () => {
+  it('rejects requests with an invalid signature with 401', async () => {
     const apply = vi.fn();
     const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
     const res = makeRes();
 
-    await handler(makeReq(validEvent, 'wrong') as never, res as never);
+    await handler(makeSignedReq(validEvent, 'wrong-secret') as never, res as never);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('rejects requests with an expired timestamp with 401', async () => {
+    const apply = vi.fn();
+    const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
+    const res = makeRes();
+    const expired = String(Date.now() - 10 * 60 * 1000);
+
+    await handler(makeSignedReq(validEvent, SECRET, expired) as never, res as never);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('rejects bearer-token requests with 401 (no cross-mode acceptance)', async () => {
+    const apply = vi.fn();
+    const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
+    const res = makeRes();
+
+    await handler(makeTokenReq(validEvent, SECRET) as never, res as never);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(apply).not.toHaveBeenCalled();
@@ -59,35 +101,52 @@ describe('createSyncRouteHandler', () => {
     const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
     const res = makeRes();
 
-    await handler(makeReq({ type: 'nope' }, SECRET) as never, res as never);
+    await handler(makeSignedReq({ type: 'nope' }, SECRET) as never, res as never);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(apply).not.toHaveBeenCalled();
   });
 
-  it('rejects invalid JSON with 400', async () => {
+  it('rejects invalid JSON with 400 before checking auth', async () => {
     const apply = vi.fn();
     const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
-    const req = Readable.from(['{invalid']) as IncomingMessage & { body?: unknown };
-    req.headers = { 'x-sync-token': SECRET };
     const res = makeRes();
 
-    await handler(req as never, res as never);
+    await handler(makeRawReq('{invalid', {}) as never, res as never);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(apply).not.toHaveBeenCalled();
   });
 
-  it('applies a valid event and responds 200', async () => {
+  it('applies a valid signed event and responds 200', async () => {
     const apply = vi.fn().mockResolvedValue(undefined);
     const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
     const res = makeRes();
 
-    await handler(makeReq(validEvent, SECRET) as never, res as never);
+    await handler(makeSignedReq(validEvent, SECRET) as never, res as never);
 
     expect(apply).toHaveBeenCalledWith(validEvent);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ ok: true });
+  });
+
+  it('verifies the signature against the exact raw bytes from req.rawBody', async () => {
+    const apply = vi.fn().mockResolvedValue(undefined);
+    const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
+    const res = makeRes();
+
+    // Simulate n8n's rawBodyReader: rawBody + pre-parsed body, no readable stream
+    const raw = JSON.stringify(validEvent);
+    const timestamp = String(Date.now());
+    const req = Readable.from([]) as TestReq;
+    req.headers = { 'x-sync-timestamp': timestamp, 'x-sync-signature': signPayload(SECRET, timestamp, raw) };
+    req.rawBody = Buffer.from(raw);
+    req.body = validEvent;
+
+    await handler(req as never, res as never);
+
+    expect(apply).toHaveBeenCalledWith(validEvent);
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 
   it('responds 500 when applying fails', async () => {
@@ -95,10 +154,36 @@ describe('createSyncRouteHandler', () => {
     const handler = createSyncRouteHandler({ secret: SECRET, apply, log });
     const res = makeRes();
 
-    await handler(makeReq(validEvent, SECRET) as never, res as never);
+    await handler(makeSignedReq(validEvent, SECRET) as never, res as never);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(log.error).toHaveBeenCalled();
+  });
+});
+
+describe('createSyncRouteHandler (token mode)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('accepts a valid bearer token', async () => {
+    const apply = vi.fn().mockResolvedValue(undefined);
+    const handler = createSyncRouteHandler({ secret: SECRET, apply, log, authMode: 'token' });
+    const res = makeRes();
+
+    await handler(makeTokenReq(validEvent, SECRET) as never, res as never);
+
+    expect(apply).toHaveBeenCalledWith(validEvent);
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it('rejects hmac-signed requests with 401 (no cross-mode acceptance)', async () => {
+    const apply = vi.fn();
+    const handler = createSyncRouteHandler({ secret: SECRET, apply, log, authMode: 'token' });
+    const res = makeRes();
+
+    await handler(makeSignedReq(validEvent, SECRET) as never, res as never);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(apply).not.toHaveBeenCalled();
   });
 });
 
