@@ -1,28 +1,40 @@
 # @egose/n8n-sync
 
-Sync n8n credentials and workflows between two n8n instances using [n8n external hooks](https://docs.n8n.io/deploy/host-n8n/configure-n8n/external-hooks/).
+Sync n8n credentials and workflows between n8n instances using [n8n external hooks](https://docs.n8n.io/deploy/host-n8n/configure-n8n/external-hooks/).
 
 The package builds two self-contained CommonJS hook bundles:
 
-| Bundle                | Role                                                                                                                        |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `dist/publisher.cjs`  | Runs on the **source** instance. Lifecycle hooks POST sync events to the subscriber over HTTPS.                             |
-| `dist/subscriber.cjs` | Runs on the **target** instance. Mounts an endpoint on n8n's own server and applies events via n8n's internal repositories. |
+| Bundle                | Role                                                                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `dist/publisher.cjs`  | Runs on the **source** instance. Lifecycle hooks POST sync events to one or more subscribers over HTTPS.                     |
+| `dist/subscriber.cjs` | Runs on each **target** instance. Mounts an endpoint on n8n's own server and applies events via n8n's internal repositories. |
 
 ## How it works
 
 ```
 ┌──────────────┐   credentials.create/update/delete      ┌──────────────┐
 │  source n8n  │   workflow.afterCreate/afterUpdate/…    │  target n8n  │
-│              │ ──────────────────────────────────────► │              │
+│              │ ──────────────────────────────────────► │   (1..n)     │
 │ publisher.cjs│   POST /rest/sync/v1/events             │subscriber.cjs│
-│              │   x-sync-token: <shared secret>         │              │
+│              │   HMAC-signed or bearer-token auth      │              │
 └──────────────┘                                         └──────────────┘
 ```
 
-- The publisher never throws: delivery failures are retried (1s, 2s, 4s, capped at 10s) and then logged, so a sync outage cannot break n8n operations.
+- **Fan-out**: the publisher delivers every event to every URL in `SYNC_SUBSCRIBER_URLS`. Each target has its own **serialized delivery queue** — events reach a given target in hook order, and a slow or unreachable target never delays the others.
+- **Fire-and-forget hooks**: deliveries run in the background and failures are retried (1s, 2s, 4s, capped at 10s) then logged, so a sync outage cannot break n8n operations. The publisher never throws.
 - The subscriber applies events **idempotently with source IDs preserved**, using the target instance's own TypeORM repositories (resolved from n8n's DI container at runtime).
-- Credential `data` is passed through **encrypted** — both instances must share the same `N8N_ENCRYPTION_KEY` so the target can decrypt secrets at runtime.
+- Credential `data` is passed through **encrypted** — all instances must share the same `N8N_ENCRYPTION_KEY` so targets can decrypt secrets at runtime.
+
+## Authentication
+
+Two schemes are available via `SYNC_AUTH_MODE` (must match on both sides):
+
+| Mode             | Headers                                | Notes                                                                                                                                                                                                           |
+| ---------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hmac` (default) | `x-sync-timestamp`, `x-sync-signature` | Per-request HMAC-SHA256 of `<timestamp>.<rawBody>` keyed with the shared secret. Replay-protected: the subscriber rejects timestamps outside a 5-minute tolerance. Every retry re-signs with a fresh timestamp. |
+| `token`          | `x-sync-token`                         | Static shared-secret bearer token. Simpler; use only over TLS.                                                                                                                                                  |
+
+Signature verification uses the exact raw request bytes (read from n8n's global `rawBodyReader` middleware), so it survives n8n's own body parsing.
 
 ## Wired hooks
 
@@ -43,11 +55,11 @@ Build the bundles (`pnpm --filter @egose/n8n-sync build`), copy them to both ins
 
 ```bash
 export EXTERNAL_HOOKS_FILES=/path/to/publisher.cjs
-export SYNC_SUBSCRIBER_URL=https://n8n-target.example.com
+export SYNC_SUBSCRIBER_URLS=https://n8n-target-a.example.com,https://n8n-target-b.example.com
 export SYNC_SHARED_SECRET=<shared-secret>
 ```
 
-### Target instance (subscriber)
+### Target instance(s) (subscriber)
 
 ```bash
 export EXTERNAL_HOOKS_FILES=/path/to/subscriber.cjs
@@ -62,31 +74,34 @@ Restart both instances. The subscriber logs `n8n-sync subscriber routes active.`
 
 ### Both sides
 
-| Variable             | Required | Default | Description                                  |
-| -------------------- | -------- | ------- | -------------------------------------------- |
-| `SYNC_SHARED_SECRET` | yes      | —       | Shared secret sent as `x-sync-token` header. |
-| `LOG_LEVEL`          | no       | `info`  | `debug` \| `info` \| `warn` \| `error`.      |
+| Variable             | Required | Default | Description                                                       |
+| -------------------- | -------- | ------- | ----------------------------------------------------------------- |
+| `SYNC_SHARED_SECRET` | yes      | —       | Shared secret: HMAC key (hmac mode) or bearer token (token mode). |
+| `SYNC_AUTH_MODE`     | no       | `hmac`  | `hmac` \| `token` — must match on publisher and subscriber.       |
+| `LOG_LEVEL`          | no       | `info`  | `debug` \| `info` \| `warn` \| `error`.                           |
 
 ### Publisher
 
-| Variable              | Required | Default                | Description                                        |
-| --------------------- | -------- | ---------------------- | -------------------------------------------------- |
-| `SYNC_SUBSCRIBER_URL` | yes      | —                      | Base URL of the target instance (no trailing `/`). |
-| `SYNC_SOURCE_ID`      | no       | hostname               | Identifier stamped on every event.                 |
-| `SYNC_EVENTS_PATH`    | no       | `/rest/sync/v1/events` | Endpoint path on the subscriber.                   |
-| `SYNC_TIMEOUT_MS`     | no       | `10000`                | Per-attempt HTTP timeout.                          |
-| `SYNC_MAX_RETRIES`    | no       | `3`                    | Total delivery attempts per event.                 |
+| Variable               | Required | Default                | Description                                                                               |
+| ---------------------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| `SYNC_SUBSCRIBER_URLS` | yes      | —                      | Comma-separated target base URLs (fan-out). Falls back to `SYNC_SUBSCRIBER_URL` if unset. |
+| `SYNC_SUBSCRIBER_URL`  | no       | —                      | Legacy single-target form of `SYNC_SUBSCRIBER_URLS`.                                      |
+| `SYNC_SOURCE_ID`       | no       | hostname               | Identifier stamped on every event.                                                        |
+| `SYNC_EVENTS_PATH`     | no       | `/rest/sync/v1/events` | Endpoint path on the subscriber.                                                          |
+| `SYNC_TIMEOUT_MS`      | no       | `10000`                | Per-attempt HTTP timeout.                                                                 |
+| `SYNC_MAX_RETRIES`     | no       | `3`                    | Total delivery attempts per event.                                                        |
 
 ### Subscriber
 
-| Variable                  | Required | Default                                                | Description                                                               |
-| ------------------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `SYNC_ROUTE_BASE`         | no       | `/rest/sync/v1`                                        | Base path for the mounted routes.                                         |
-| `SYNC_TARGET_PROJECT_ID`  | no       | —                                                      | Link newly synced workflows/credentials to this project (`*:owner` role). |
-| `SYNC_APPLY_ACTIVE_STATE` | no       | `false`                                                | Also write `active`/`activeVersionId` (see limitations).                  |
-| `SYNC_MAX_BODY_BYTES`     | no       | `16777216`                                             | Request body size cap.                                                    |
-| `N8N_DI_PATH`             | no       | `/usr/local/lib/node_modules/n8n/node_modules/@n8n/di` | Path to n8n's `@n8n/di` module.                                           |
-| `N8N_DB_PATH`             | no       | `/usr/local/lib/node_modules/n8n/node_modules/@n8n/db` | Path to n8n's `@n8n/db` module.                                           |
+| Variable                      | Required | Default                                                | Description                                                               |
+| ----------------------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `SYNC_ROUTE_BASE`             | no       | `/rest/sync/v1`                                        | Base path for the mounted routes.                                         |
+| `SYNC_TARGET_PROJECT_ID`      | no       | —                                                      | Link newly synced workflows/credentials to this project (`*:owner` role). |
+| `SYNC_APPLY_ACTIVE_STATE`     | no       | `false`                                                | Also write `active`/`activeVersionId` (see limitations).                  |
+| `SYNC_MAX_BODY_BYTES`         | no       | `16777216`                                             | Request body size cap.                                                    |
+| `SYNC_SIGNATURE_TOLERANCE_MS` | no       | `300000`                                               | Max signature age/skew accepted in hmac mode.                             |
+| `N8N_DI_PATH`                 | no       | `/usr/local/lib/node_modules/n8n/node_modules/@n8n/di` | Path to n8n's `@n8n/di` module.                                           |
+| `N8N_DB_PATH`                 | no       | `/usr/local/lib/node_modules/n8n/node_modules/@n8n/db` | Path to n8n's `@n8n/db` module.                                           |
 
 ## Limitations
 
@@ -94,7 +109,8 @@ Restart both instances. The subscriber logs `n8n-sync subscriber routes active.`
 - **`workflow.activate` fires pre-commit.** If a later hook rejects the activation, the subscriber may briefly hold an uncommitted state; the next event converges it.
 - **Active state is DB-only.** With `SYNC_APPLY_ACTIVE_STATE=true`, the target's `active` flag is written to the database, but triggers/webhooks are not registered with the target's active workflow manager until restart or manual toggle. Keep it `false` for passive-standby targets.
 - **One-way, last-write-wins.** Sync is directional. Upserts carry the source `updatedAt` and are skipped when the target row is already at or beyond it, so out-of-order or duplicate deliveries cannot regress state. Deletes and archives are applied unconditionally.
-- **Credential sync requires a shared `N8N_ENCRYPTION_KEY`** on both instances.
+- **Credential sync requires a shared `N8N_ENCRYPTION_KEY`** on all instances.
+- **The delivery queue is in-memory.** Events queued but not yet delivered when the source instance restarts are lost; state converges on the next event for that entity (or stays divergent until then).
 
 ## Development
 
