@@ -86,6 +86,17 @@ describe('createPublisherHooks', () => {
     expect(emittedEvent(emit)).toMatchObject({ type: 'workflow.upsert', workflow: { id: 'wf-1' } });
   });
 
+  it('resolves workflow.afterCreate from dbCollections when n8n passes only the workflow id', async () => {
+    const { emit, hooks } = makeDeps();
+
+    await hooks.workflow.afterCreate[0].call(
+      { dbCollections: { Workflow: { findOne: vi.fn().mockResolvedValue(workflow) } } },
+      'wf-1' as never,
+    );
+
+    expect(emittedEvent(emit)).toMatchObject({ type: 'workflow.upsert', workflow: { id: 'wf-1' } });
+  });
+
   it('maps workflow.activate to workflow.activate', async () => {
     const { emit, hooks } = makeDeps();
     await hooks.workflow.activate[0]({ ...workflow, active: true } as never);

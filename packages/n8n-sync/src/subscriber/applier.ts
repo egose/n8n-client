@@ -136,8 +136,9 @@ export function createApplier(repos: N8nSyncRepositories, options: ApplierOption
     const fields: Record<string, unknown> = {
       name: credential.name,
       type: credential.type,
-      // Encrypted blob passthrough — requires both instances to share
-      // N8N_ENCRYPTION_KEY so the target can decrypt it at runtime.
+      // n8n credential hooks can surface either the encrypted DB blob or the
+      // plain JSON object n8n encrypts on save. Pass it through verbatim and
+      // let the target repository persist it using its own entity semantics.
       data: credential.data,
       isGlobal: credential.isGlobal ?? false,
       isManaged: credential.isManaged ?? false,
