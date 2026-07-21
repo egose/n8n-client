@@ -16,6 +16,7 @@ import InsightsClient from './clients/insights.js';
 import SourceControlClient from './clients/source-control.js';
 import DiscoverClient from './clients/discover.js';
 import N8nPackageClient from './clients/n8n-package.js';
+import SecurityPolicyClient from './clients/security-policy.js';
 
 /**
  * Root client for the n8n Public API v1.
@@ -154,6 +155,11 @@ export default class N8nClient {
   /** Source control operations — pull, list files (singleton). */
   sourceControl() {
     return new SourceControlClient(this.#http);
+  }
+
+  /** Security policy settings (singleton). */
+  securityPolicy() {
+    return new SecurityPolicyClient(this.#http);
   }
 
   /** Resource discovery — list available API resources, operations, and filters (singleton). */

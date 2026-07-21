@@ -1,4 +1,4 @@
-import type { PaginatedResponse } from '../pagination.js';
+import type { PaginatedResponse, PaginationParams } from '../pagination.js';
 import ExecutionClient from './execution.js';
 import type {
   Workflow,
@@ -11,6 +11,10 @@ import type {
   WorkflowActivateRequest,
   Tag,
   TagId,
+  TestRunListParams,
+  TestRunListResponse,
+  TestRunSummary,
+  TestCaseExecutionListResponse,
 } from '../types.js';
 import BaseClient from './base.js';
 import WorkflowResource from '../resources/workflow.js';
@@ -87,5 +91,17 @@ export default class WorkflowClient extends BaseClient {
 
   async getVersion(id: string, versionId: string): Promise<WorkflowVersion> {
     return this.http.get<WorkflowVersion>(`/workflows/${id}/${versionId}`);
+  }
+
+  async listTestRuns(id: string, params?: TestRunListParams): Promise<TestRunListResponse> {
+    return this.http.get<TestRunListResponse>(`/workflows/${id}/test-runs`, params);
+  }
+
+  async getTestRun(id: string, runId: string): Promise<TestRunSummary> {
+    return this.http.get<TestRunSummary>(`/workflows/${id}/test-runs/${runId}`);
+  }
+
+  async listTestCases(id: string, runId: string, params?: PaginationParams): Promise<TestCaseExecutionListResponse> {
+    return this.http.get<TestCaseExecutionListResponse>(`/workflows/${id}/test-runs/${runId}/test-cases`, params);
   }
 }

@@ -2,9 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 
 const REPO_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const OPENAPI_PATH = join(REPO_ROOT, '.public-api/v1.1.1.json');
+const OPENAPI_PATH = join(REPO_ROOT, '.public-api/v1.1.1.yml');
 
 interface SchemaDoc {
   $ref?: string;
@@ -23,11 +24,11 @@ interface OpenApiDocument {
   };
 }
 
-function loadJson<T>(filePath: string): T {
-  return JSON.parse(readFileSync(filePath, 'utf8')) as T;
+function loadYaml<T>(filePath: string): T {
+  return parseYaml(readFileSync(filePath, 'utf8')) as T;
 }
 
-const OPENAPI = loadJson<OpenApiDocument>(OPENAPI_PATH);
+const OPENAPI = loadYaml<OpenApiDocument>(OPENAPI_PATH);
 const SCHEMAS = OPENAPI.components?.schemas ?? {};
 
 function getSchema(schemaName: string): SchemaDoc {
@@ -112,6 +113,7 @@ const EXPECTED_SCHEMAS: Array<{
       'nodes',
       'connections',
       'settings',
+      'nodeGroups',
       'staticData',
       'pinData',
       'meta',
