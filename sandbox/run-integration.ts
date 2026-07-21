@@ -20,7 +20,8 @@
  *   COMPOSE_PROFILES                  ignored (no profiles)
  *   NO_CLEANUP=1                      keep the stack running after tests pass (debugging)
  *   N8N_SYNC_INTEGRATION_SECRETS      path to a pre-existing api-keys.json
- *                                     (skip the provisioner when not null and file exists)
+ *                                     (skip the provisioner only when this env
+ *                                     var is explicitly set and the file exists)
  */
 
 import { spawnSync } from 'node:child_process';
@@ -62,9 +63,8 @@ function run(cmd: string, args: string[], opts: { cwd?: string } = {}): { code: 
 }
 
 async function main() {
-  const skipProvisioner = process.env.N8N_SYNC_INTEGRATION_SECRETS
-    ? existsSync(process.env.N8N_SYNC_INTEGRATION_SECRETS)
-    : existsSync(SECRETS_PATH);
+  const explicitSecretsPath = process.env.N8N_SYNC_INTEGRATION_SECRETS;
+  const skipProvisioner = explicitSecretsPath ? existsSync(explicitSecretsPath) : false;
   const noCleanup = process.env.NO_CLEANUP === '1';
 
   step('Bring up the docker-compose stack');

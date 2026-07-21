@@ -262,7 +262,23 @@ describe('n8n-sync integration: stale / out-of-order delivery is skipped', () =>
 beforeAll(async () => {
   // Sanity: the source instance is reachable and the subscriber routes are
   // fully mounted before any lifecycle hook tries to publish into n8n2.
-  await source.workflows().list();
+  try {
+    await source.workflows().list();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const status =
+      typeof error === 'object' && error !== null && 'status' in error
+        ? (error as { status?: unknown }).status
+        : undefined;
+    if (status === 401 || /unauthorized/i.test(message)) {
+      throw new Error(
+        `source API key is unauthorized for ${secrets.n8n1.baseUrl}. ` +
+          `The integration secrets file is likely stale. Re-run the provisioner or run ` +
+          '`pnpm test:integration` so sandbox/secrets/api-keys.json is regenerated.',
+      );
+    }
+    throw error;
+  }
   await waitFor(
     async () => {
       const res = await fetch(`${secrets.n8n2.baseUrl}/rest/sync/v1/health`);
