@@ -41,5 +41,5 @@ COPY --from=bundles /repo/packages/n8n-sync/dist/publisher.cjs  /opt/n8n-hooks/p
 COPY --from=bundles /repo/packages/n8n-sync/dist/subscriber.cjs /opt/n8n-hooks/subscriber.cjs
 
 # Both bundles are present; per-container role is selected at runtime via
-# EXTERNAL_HOOKS_FILES (see sandbox/docker-compose.yml).
-ENV EXTERNAL_HOOKS_FILES=/opt/n8n-hooks/publisher.cjs
+# EXTERNAL_HOOK_FILES (see sandbox/docker-compose.yml).
+ENV EXTERNAL_HOOK_FILES=/opt/n8n-hooks/publisher.cjs
