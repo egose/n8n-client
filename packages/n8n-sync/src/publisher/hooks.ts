@@ -58,11 +58,10 @@ export function createPublisherHooks(deps: PublisherDeps): IExternalHooksFileDat
   async function resolveCredential(
     this: PublisherHookThis,
     credential: Partial<ICredentialsDb>,
-    options?: { preferDbLookup?: boolean },
   ): Promise<ICredentialsDb | undefined> {
     const hasCompletePayload = typeof credential.id === 'string' && credential.data !== undefined;
 
-    if (!options?.preferDbLookup && hasCompletePayload) {
+    if (hasCompletePayload) {
       return credential as ICredentialsDb;
     }
 
@@ -91,25 +90,13 @@ export function createPublisherHooks(deps: PublisherDeps): IExternalHooksFileDat
         });
         if (byIdentity) return byIdentity;
       }
-
-      if (options?.preferDbLookup && typeof credential.type === 'string') {
-        const latestByType = await repository.findOne({
-          where: { type: credential.type },
-          order: { updatedAt: 'DESC' },
-        });
-        if (latestByType) return latestByType;
-      }
     }
 
     return hasCompletePayload ? (credential as ICredentialsDb) : undefined;
   }
 
-  async function emitCredentialUpsert(
-    this: PublisherHookThis,
-    credential: Partial<ICredentialsDb>,
-    options?: { preferDbLookup?: boolean },
-  ): Promise<void> {
-    const resolved = await resolveCredential.call(this, credential, options);
+  async function emitCredentialUpsert(this: PublisherHookThis, credential: Partial<ICredentialsDb>): Promise<void> {
+    const resolved = await resolveCredential.call(this, credential);
     if (!resolved) return;
     await deps.emit(envelope({ type: 'credentials.upsert', credential: mapCredential(resolved) }));
   }
@@ -131,10 +118,7 @@ export function createPublisherHooks(deps: PublisherDeps): IExternalHooksFileDat
       ],
       update: [
         async function (this: PublisherHookThis, newCredentialData: Partial<ICredentialsDb>) {
-          // `credentials.update` fires before n8n persists the new values. Even
-          // when the hook payload includes `id` + `data`, that snapshot can
-          // still reflect the old row. Prefer the post-save DB lookup.
-          void emitCredentialUpsert.call(this, newCredentialData, { preferDbLookup: true });
+          await emitCredentialUpsert.call(this, newCredentialData);
         },
       ],
       delete: [
