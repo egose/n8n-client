@@ -5,7 +5,7 @@ Purpose: n8n external-hook bundles that sync credentials and workflows between n
 
 ## Quick Start
 
-Build two self-contained CJS hook bundles and point n8n's `EXTERNAL_HOOKS_FILES` at them:
+Build two self-contained CJS hook bundles and point n8n's `EXTERNAL_HOOK_FILES` at them:
 
 - `dist/publisher.cjs` — source instance; lifecycle hooks fan sync events out to every target in `SYNC_SUBSCRIBER_URLS`
 - `dist/subscriber.cjs` — target instance; mounts `POST /rest/sync/v1/events` (+ `GET …/health`) on n8n's own server in the `n8n.ready` hook and applies events via n8n's internal repositories
