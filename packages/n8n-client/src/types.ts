@@ -374,6 +374,47 @@ export interface WorkflowGetParams {
   excludePinnedData?: boolean;
 }
 
+export interface TestRunSummary {
+  id: string;
+  status: 'new' | 'running' | 'completed' | 'error' | 'cancelled';
+  runAt: string | null;
+  completedAt: string | null;
+  metrics: JsonObject | null;
+  errorCode: string | null;
+  errorDetails: JsonObject | null;
+  finalResult: 'success' | 'error' | 'warning' | null;
+  testCaseCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestRunListResponse {
+  data: TestRunSummary[];
+  nextCursor?: string;
+}
+
+export interface TestRunListParams extends PaginationParams {
+  status?: 'new' | 'running' | 'completed' | 'error' | 'cancelled';
+}
+
+export interface TestCaseExecution {
+  id: string;
+  status: 'new' | 'running' | 'evaluation_running' | 'success' | 'error' | 'warning' | 'cancelled';
+  runAt: string | null;
+  completedAt: string | null;
+  metrics: JsonObject | null;
+  errorCode: string | null;
+  errorDetails: JsonObject | null;
+  inputs: JsonObject | null;
+  outputs: JsonObject | null;
+  executionId: string | null;
+}
+
+export interface TestCaseExecutionListResponse {
+  data: TestCaseExecution[];
+  nextCursor?: string;
+}
+
 export interface WorkflowActivateRequest {
   versionId?: string;
   name?: string;
@@ -891,6 +932,10 @@ export interface UpdateDataTableRequest {
   name: string;
 }
 
+export interface ClearRowsResponse {
+  deletedCount: number;
+}
+
 /** Payload for adding a new column to a data table. */
 export interface CreateColumnRequest {
   name: string;
@@ -1157,6 +1202,25 @@ export interface Audit {
   'Filesystem Risk Report'?: AuditRiskReport;
   'Nodes Risk Report'?: AuditRiskReport;
   'Instance Risk Report'?: AuditRiskReport;
+}
+
+export interface SecurityPolicyRedactionEnforcement {
+  floor: 'off' | 'production' | 'all';
+}
+
+export interface SecurityPolicy {
+  personalSpacePublishing: boolean;
+  personalSpaceSharing: boolean;
+  publishedPersonalWorkflowsCount: number;
+  sharedPersonalWorkflowsCount: number;
+  sharedPersonalCredentialsCount: number;
+  redactionEnforcement: SecurityPolicyRedactionEnforcement;
+}
+
+export interface SecurityPolicyUpdate {
+  personalSpacePublishing: boolean;
+  personalSpaceSharing: boolean;
+  redactionEnforcement: SecurityPolicyRedactionEnforcement;
 }
 
 // ─── Insights ────────────────────────────────────────────────────────────────

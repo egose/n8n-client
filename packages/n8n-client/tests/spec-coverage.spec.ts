@@ -2,9 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 
 const REPO_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const OPENAPI_PATH = join(REPO_ROOT, '.public-api/v1.1.1.json');
+const OPENAPI_PATH = join(REPO_ROOT, '.public-api/v1.1.1.yml');
 const CLIENTS_DIR = join(REPO_ROOT, 'src/clients');
 const METHOD_KEYS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
@@ -20,8 +21,8 @@ interface OpenApiPathDocument {
   delete?: unknown;
 }
 
-function loadJson<T>(filePath: string): T {
-  return JSON.parse(readFileSync(filePath, 'utf8')) as T;
+function loadYaml<T>(filePath: string): T {
+  return parseYaml(readFileSync(filePath, 'utf8')) as T;
 }
 
 function normalizePath(path: string): string {
@@ -29,7 +30,7 @@ function normalizePath(path: string): string {
 }
 
 function readSpecOperations(): Set<string> {
-  const openapi = loadJson<OpenApiDocument>(OPENAPI_PATH);
+  const openapi = loadYaml<OpenApiDocument>(OPENAPI_PATH);
   const operations = new Set<string>();
 
   for (const [path, pathDoc] of Object.entries(openapi.paths ?? {})) {

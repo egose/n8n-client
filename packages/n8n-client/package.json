@@ -40,5 +40,7 @@
   "engines": {
     "node": ">=20"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "yaml": "^2.9.0"
+  }
 }

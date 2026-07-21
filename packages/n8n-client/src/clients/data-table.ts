@@ -7,6 +7,7 @@ import type {
   DataTableRow,
   DataTableRowListParams,
   DataTableRowListResponse,
+  ClearRowsResponse,
   CreateColumnRequest,
   CreateDataTableRequest,
   DeleteRowsBooleanParams,
@@ -94,6 +95,10 @@ export default class DataTableClient extends BaseClient {
   async upsertRow(dataTableId: string, data: UpsertRowDataRequest): Promise<DataTableRow>;
   async upsertRow(dataTableId: string, data: UpsertRowRequest): Promise<boolean | DataTableRow> {
     return this.http.post<boolean | DataTableRow>(`/data-tables/${dataTableId}/rows/upsert`, data);
+  }
+
+  async clearRows(dataTableId: string): Promise<ClearRowsResponse> {
+    return this.http.delete<ClearRowsResponse>(`/data-tables/${dataTableId}/rows/clear`);
   }
 
   async deleteRows(dataTableId: string, params: DeleteRowsBooleanParams): Promise<boolean>;

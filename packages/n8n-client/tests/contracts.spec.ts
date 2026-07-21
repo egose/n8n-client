@@ -10,6 +10,7 @@ import ExecutionClient from '../src/clients/execution';
 import FolderClient from '../src/clients/folder';
 import InsightsClient from '../src/clients/insights';
 import N8nPackageClient from '../src/clients/n8n-package';
+import SecurityPolicyClient from '../src/clients/security-policy';
 import SourceControlClient from '../src/clients/source-control';
 import TagClient from '../src/clients/tag';
 import UserClient from '../src/clients/user';
@@ -85,6 +86,8 @@ import type {
   ProjectMemberListResponse,
   ProjectUpdate,
   PullRequest,
+  SecurityPolicy,
+  SecurityPolicyUpdate,
   SourceControlledFile,
   StopManyExecutionsRequest,
   StopManyExecutionsResponse,
@@ -97,6 +100,11 @@ import type {
   UserGetParams,
   UserListParams,
   UserListResponse,
+  ClearRowsResponse,
+  TestCaseExecutionListResponse,
+  TestRunListParams,
+  TestRunListResponse,
+  TestRunSummary,
   UpdateColumnRequest,
   UpdateCommunityPackageRequest,
   UpdateDataTableRequest,
@@ -189,6 +197,7 @@ describe('Public API contracts', () => {
     expectTypeOf(client.audit()).toEqualTypeOf<AuditClient>();
     expectTypeOf(client.insights()).toEqualTypeOf<InsightsClient>();
     expectTypeOf(client.sourceControl()).toEqualTypeOf<SourceControlClient>();
+    expectTypeOf(client.securityPolicy()).toEqualTypeOf<SecurityPolicyClient>();
     expectTypeOf(client.discover()).toEqualTypeOf<DiscoverClient>();
     expectTypeOf(client.n8nPackage()).toEqualTypeOf<N8nPackageClient>();
   });
@@ -211,6 +220,13 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.getTags('wf-1')).toEqualTypeOf<Promise<Tag[]>>();
     expectTypeOf(handle.updateTags('wf-1', [{ id: 'tag-1' }])).toEqualTypeOf<Promise<Tag[]>>();
     expectTypeOf(handle.getVersion('wf-1', 'ver-1')).toEqualTypeOf<Promise<WorkflowVersion>>();
+    expectTypeOf(handle.listTestRuns('wf-1', {} satisfies TestRunListParams)).toEqualTypeOf<
+      Promise<TestRunListResponse>
+    >();
+    expectTypeOf(handle.getTestRun('wf-1', 'run-1')).toEqualTypeOf<Promise<TestRunSummary>>();
+    expectTypeOf(handle.listTestCases('wf-1', 'run-1', {} satisfies PaginationParams)).toEqualTypeOf<
+      Promise<TestCaseExecutionListResponse>
+    >();
   });
 
   test('Workflow nested graph types stay structured', () => {
@@ -326,6 +342,7 @@ describe('Public API contracts', () => {
     expectTypeOf(
       handle.deleteRows('dt-1', { filter: '{}', returnData: true } satisfies DeleteRowsDataParams),
     ).toEqualTypeOf<Promise<DataTableRow[]>>();
+    expectTypeOf(handle.clearRows('dt-1')).toEqualTypeOf<Promise<ClearRowsResponse>>();
     expectTypeOf(handle.listColumns('dt-1')).toEqualTypeOf<Promise<DataTableColumn[]>>();
     expectTypeOf(handle.createColumn('dt-1', { name: 'col', type: 'string' })).toEqualTypeOf<
       Promise<DataTableColumn>
@@ -425,15 +442,24 @@ describe('Public API contracts', () => {
     expectTypeOf(handle.uninstall('n8n-nodes-test')).toEqualTypeOf<Promise<void>>();
   });
 
-  test('AuditClient, InsightsClient, SourceControlClient, DiscoverClient, and N8nPackageClient stay stable', () => {
+  test('AuditClient, InsightsClient, SecurityPolicyClient, SourceControlClient, DiscoverClient, and N8nPackageClient stay stable', () => {
     const audit = new AuditClient(createMockHttpClient());
     const insights = new InsightsClient(createMockHttpClient());
+    const securityPolicy = new SecurityPolicyClient(createMockHttpClient());
     const sourceControl = new SourceControlClient(createMockHttpClient());
     const discover = new DiscoverClient(createMockHttpClient());
     const n8nPackage = new N8nPackageClient(createMockHttpClient());
 
     expectTypeOf(audit.generate({} satisfies AuditRequest)).toEqualTypeOf<Promise<Audit>>();
     expectTypeOf(insights.getSummary({} satisfies InsightsSummaryParams)).toEqualTypeOf<Promise<InsightsSummary>>();
+    expectTypeOf(securityPolicy.get()).toEqualTypeOf<Promise<SecurityPolicy>>();
+    expectTypeOf(
+      securityPolicy.update({
+        personalSpacePublishing: true,
+        personalSpaceSharing: true,
+        redactionEnforcement: { floor: 'production' },
+      } satisfies SecurityPolicyUpdate),
+    ).toEqualTypeOf<Promise<SecurityPolicy>>();
     expectTypeOf(sourceControl.pull({} satisfies PullRequest)).toEqualTypeOf<Promise<SourceControlledFile[]>>();
     expectTypeOf(discover.get({} satisfies DiscoverParams)).toEqualTypeOf<Promise<DiscoverResponse>>();
     expectTypeOf(n8nPackage.exportWorkflows({ workflowIds: [] } satisfies ExportWorkflowsRequest)).toEqualTypeOf<
