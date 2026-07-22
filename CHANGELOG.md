@@ -1,3 +1,10 @@
+## [0.10.0](https://github.com/egose/n8n-toolkit/compare/v0.9.0...v0.10.0) (2026-07-22)
+
+### Features
+
+* centralize sandbox provisioner helpers and add api sweep results ([05684e3](https://github.com/egose/n8n-toolkit/commit/05684e3b68de609fcf3475b846126335baa6d9ba))
+* **n8n-client:** normalize client responses and broaden client models ([04efd7b](https://github.com/egose/n8n-toolkit/commit/04efd7b350c5009dbb3197a5a1afe669acd4f8a7))
+
 ## [0.9.0](https://github.com/egose/n8n-toolkit/compare/v0.8.0...v0.9.0) (2026-07-21)
 
 ### Features
