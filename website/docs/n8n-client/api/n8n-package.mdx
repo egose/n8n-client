@@ -1,0 +1,83 @@
+---
+sidebar_label: n8n Package
+sidebar_position: 15
+---
+
+# n8n Package API
+
+`N8nPackageClient` manages workflow import and export packages.
+
+This handle is beta-aligned with the public API and is useful when you need to move groups of workflows between instances or environments.
+
+## Access
+
+```ts
+const n8nPackage = client.n8nPackage();
+```
+
+## Methods
+
+## Common Tasks
+
+- export one or more workflows as a gzipped package
+- import a package into a target project or folder
+- decide how workflow conflicts should be handled during import
+
+### `exportWorkflows(data)`
+
+Export workflows, folders, or whole projects as a downloadable gzipped package.
+
+```ts
+const buffer = await client.n8nPackage().exportWorkflows({
+  workflowIds: ['wf-1', 'wf-2'],
+  includeVariableValues: true,
+  missingWorkflowDependencyPolicy: 'include-in-package',
+});
+// buffer is ArrayBuffer (gzipped package)
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `workflowIds` | `string[]` | Loose workflows to export. Mutually exclusive with whole-project exports. |
+| `folderIds` | `string[]` | Folders to export, including nested folders. Mutually exclusive with whole-project exports. |
+| `projectIds` | `string[]` | Whole projects to export. Mutually exclusive with loose workflow/folder exports. |
+| `includeVariableValues` | `boolean` | Whether referenced variable values are bundled into the package. Defaults to `true`. |
+| `missingWorkflowDependencyPolicy` | `'fail' \| 'reference-only' \| 'include-in-package'` | Policy for missing static sub-workflow dependencies. Defaults to `fail`. |
+
+### `importPackage(pkg, options)`
+
+Import a workflow package (zip file). The `pkg` parameter accepts a `File` or `Blob` object.
+
+```ts
+const result = await client.n8nPackage().importPackage(
+  fileBlob,
+  {
+    projectId: 'proj-123',
+    folderId: 'folder-456',
+    credentialMatchingMode: 'id-only',
+    credentialMissingMode: 'must-preexist',
+    workflowConflictPolicy: 'new-version',
+  },
+);
+```
+
+`workflowConflictPolicy` is required. Use it to make import behavior explicit instead of relying on defaults.
+
+#### Import Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `projectId` | `string` | Target project for imported workflows. |
+| `folderId` | `string` | Target folder for imported workflows. |
+| `credentialMatchingMode` | `'id-only' \| 'name-and-type' \| 'type-only'` | How to match existing credentials. |
+| `credentialMissingMode` | `'must-preexist' \| 'create-stub'` | What to do when referenced credentials are missing. |
+| `bindings` | `{ credentials?: Record<string, string> }` | Optional explicit source→target id bindings, currently for credentials. |
+| `workflowConflictPolicy` | `'new-version' \| 'fail' \| 'skip'` | How to handle workflow name conflicts. **Required.** |
+| `workflowIdPolicy` | `'new' \| 'source'` | Controls the id assigned to newly created workflows. |
+| `workflowPublishingPolicy` | `'preserve-published-state' \| 'match-source' \| 'publish-all' \| 'unpublish-all'` | Controls whether imported workflows are published after import. |
+| `folderConflictPolicy` | `'merge' \| 'fail'` | Controls how folder conflicts are handled. |
+| `dataTableMatchingMode` | `'by-id'` | Controls how data tables are matched. |
+| `dataTableMissingMode` | `'create' \| 'must-preexist' \| 'do-nothing'` | Controls what happens when referenced data tables are missing. |
+| `dataTableSchemaConflictPolicy` | `'keep-existing' \| 'fail'` | Controls how strictly matched data-table schemas are compared. |
+
+The response (`ImportPackageResponse`) includes the imported `package` metadata, `workflows`, `folders`, `projects`, `credentials` (matched/stubbed), and explicit `bindings`.

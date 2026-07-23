@@ -151,7 +151,7 @@ function Hero({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold !text-white no-underline shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-700"
-                to="/about/quick-start/"
+                to="/n8n-client/about/quick-start/"
               >
                 Quick Start
               </Link>
@@ -161,7 +161,7 @@ function Hero({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
                     ? 'border border-slate-500 bg-slate-900/75 !text-slate-100 hover:border-slate-400 hover:bg-slate-800'
                     : 'border border-slate-300 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50'
                 }`}
-                to="/api/n8n-client/"
+                to="/n8n-client/api/n8n-client/"
               >
                 API Reference
               </Link>
@@ -171,7 +171,7 @@ function Hero({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
                     ? 'border border-orange-400/40 bg-orange-500/12 !text-orange-100 hover:bg-orange-500/20'
                     : 'border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100'
                 }`}
-                to="/example/overview/"
+                to="/n8n-client/example/overview/"
               >
                 Examples
               </Link>
@@ -233,6 +233,88 @@ function Hero({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
               <code>{codeSample}</code>
             </pre>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Packages({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
+  const items = [
+    {
+      name: 'n8n-client',
+      tagline: 'Typed TypeScript client for the n8n Public API v1.',
+      description:
+        'Manage workflows, executions, credentials, projects, and the rest of the n8n API through resource-scoped handlers built on native fetch with zero runtime dependencies.',
+      href: '/n8n-client/about/quick-start/',
+      link: 'Quick Start',
+      accent: 'blue' as const,
+    },
+    {
+      name: 'n8n-sync',
+      tagline: 'External-hook bundles that sync credentials and workflows between n8n instances.',
+      description:
+        'Two self-contained CommonJS hook bundles — a publisher on the source and a subscriber on each target — keep workflows, credentials, and opt-in executions mirrored across instances with HMAC or bearer auth and no runtime dependencies.',
+      href: '/n8n-sync/about/overview/',
+      link: 'Overview',
+      accent: 'orange' as const,
+    },
+  ];
+
+  const accentClasses = {
+    blue: {
+      badge: isDarkTheme ? 'text-blue-300' : 'text-blue-700',
+      ring: isDarkTheme ? 'hover:border-blue-700' : 'hover:border-blue-300',
+    },
+    orange: {
+      badge: isDarkTheme ? 'text-orange-300' : 'text-orange-700',
+      ring: isDarkTheme ? 'hover:border-orange-700' : 'hover:border-orange-300',
+    },
+  };
+
+  return (
+    <section
+      className={`border-b ${isDarkTheme ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-slate-50/60'}`}
+    >
+      <div className="mx-auto max-w-7xl px-6 py-18 lg:px-8">
+        <div className="max-w-2xl">
+          <p
+            className={`text-sm font-semibold uppercase tracking-[0.24em] ${isDarkTheme ? 'text-blue-300' : 'text-blue-700'}`}
+          >
+            Packages
+          </p>
+          <h2
+            className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${isDarkTheme ? 'text-slate-50' : 'text-slate-950'}`}
+          >
+            One toolkit, two focused packages.
+          </h2>
+          <p className={`mt-4 text-base leading-7 ${isDarkTheme ? 'text-slate-300' : 'text-slate-600'}`}>
+            Both packages are dependency-free, native-fetch based, and stay close to the n8n surface they wrap — a typed
+            client for driving the Public API, and hook bundles for keeping multiple instances in sync.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          {items.map((item) => {
+            const a = accentClasses[item.accent];
+            return (
+              <Link
+                key={item.name}
+                className={`group rounded-3xl border p-7 no-underline shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                  isDarkTheme ? `border-slate-800 bg-slate-900 ${a.ring}` : `border-slate-200 bg-white ${a.ring}`
+                }`}
+                to={item.href}
+              >
+                <div className={`text-sm font-semibold uppercase tracking-[0.2em] ${a.badge}`}>@egose/{item.name}</div>
+                <h3 className={`mt-3 text-2xl font-semibold ${isDarkTheme ? 'text-slate-50' : 'text-slate-950'}`}>
+                  {item.tagline}
+                </h3>
+                <p className={`mt-3 text-base leading-7 ${isDarkTheme ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {item.description}
+                </p>
+                <div className={`mt-5 text-sm font-semibold ${a.badge}`}>{item.link} →</div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -384,7 +466,7 @@ function Pathways({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
               ? 'border-slate-800 bg-slate-900 hover:border-blue-700'
               : 'border-slate-200 bg-white hover:border-blue-300'
           }`}
-          to="/about/quick-start/"
+          to="/n8n-client/about/quick-start/"
         >
           <div
             className={`text-sm font-semibold uppercase tracking-[0.2em] ${isDarkTheme ? 'text-blue-300' : 'text-blue-700'}`}
@@ -405,7 +487,7 @@ function Pathways({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
               ? 'border-slate-800 bg-slate-900 hover:border-orange-700'
               : 'border-slate-200 bg-white hover:border-orange-300'
           }`}
-          to="/api/n8n-client/"
+          to="/n8n-client/api/n8n-client/"
         >
           <div
             className={`text-sm font-semibold uppercase tracking-[0.2em] ${isDarkTheme ? 'text-orange-300' : 'text-orange-700'}`}
@@ -426,7 +508,7 @@ function Pathways({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
               ? 'border-slate-800 bg-slate-900 hover:border-emerald-700'
               : 'border-slate-200 bg-white hover:border-emerald-300'
           }`}
-          to="/example/overview/"
+          to="/n8n-client/example/overview/"
         >
           <div
             className={`text-sm font-semibold uppercase tracking-[0.2em] ${isDarkTheme ? 'text-emerald-300' : 'text-emerald-700'}`}
@@ -477,7 +559,7 @@ function ClosingCta({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
                   ? 'bg-white text-slate-950 hover:bg-slate-100'
                   : 'bg-slate-950 text-white hover:bg-slate-800'
               }`}
-              to="/about/philosophy/"
+              to="/n8n-client/about/philosophy/"
             >
               Read Philosophy
             </Link>
@@ -487,7 +569,7 @@ function ClosingCta({ isDarkTheme }: { isDarkTheme: boolean }): ReactNode {
                   ? 'border-white/20 text-white hover:bg-white/10'
                   : 'border-slate-300 text-slate-900 hover:bg-white/70'
               }`}
-              to="https://github.com/egose/n8n-client"
+              to="https://github.com/egose/n8n-toolkit"
             >
               GitHub Repository
             </Link>
@@ -521,6 +603,7 @@ export default function Home(): ReactNode {
     >
       <main className={isDarkTheme ? 'bg-slate-950' : 'bg-white'}>
         <Hero isDarkTheme={isDarkTheme} />
+        <Packages isDarkTheme={isDarkTheme} />
         <Highlights isDarkTheme={isDarkTheme} />
         <Coverage isDarkTheme={isDarkTheme} />
         <GettingStarted isDarkTheme={isDarkTheme} />

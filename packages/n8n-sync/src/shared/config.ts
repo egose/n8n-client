@@ -20,6 +20,36 @@ function urlListFromEnv(raw: string | undefined): string[] {
   return [...new Set(urls)];
 }
 
+/** Normalize a comma-separated entity list to an unordered Set. */
+function stringSetFromEnv(raw: string | undefined): Set<string> {
+  const values = (raw ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set(values);
+}
+
+/** Keys imported by both sides to gate per-entity behavior. */
+export type SyncEntity = 'workflows' | 'credentials' | 'executions';
+
+const ENTITY_NAMES: readonly SyncEntity[] = ['workflows', 'credentials', 'executions'];
+
+/**
+ * Comma-separated whitelist of entity kinds to sync. Unknown names are
+ * ignored. Defaults to workflows + credentials, so executions are opt-in.
+ *
+ * `SYNC_ENTITIES.has(name)` is the canonical gate both sides use to decide
+ * whether a publisher hook/apply path is wired for a given entity.
+ */
+export const SYNC_ENTITIES: ReadonlySet<SyncEntity> = (() => {
+  const raw = stringSetFromEnv(process.env.SYNC_ENTITIES);
+  const filtered = new Set<SyncEntity>();
+  for (const name of ENTITY_NAMES) {
+    if (raw.has(name)) filtered.add(name);
+  }
+  return filtered.size > 0 ? filtered : new Set<SyncEntity>(['workflows', 'credentials']);
+})();
+
 // Shared
 export const LOG_LEVEL = (process.env.LOG_LEVEL ?? 'info').toLowerCase();
 export const SYNC_SHARED_SECRET = process.env.SYNC_SHARED_SECRET ?? '';
@@ -29,6 +59,22 @@ export const SYNC_SHARED_SECRET = process.env.SYNC_SHARED_SECRET ?? '';
  * HMAC-SHA256 signature with replay protection) or `token` (static bearer).
  */
 export const SYNC_AUTH_MODE: 'hmac' | 'token' = process.env.SYNC_AUTH_MODE === 'token' ? 'token' : 'hmac';
+
+/**
+ * When `true`, the publisher only emits workflow/execution events for
+ * workflows that carry {@link SYNC_WORKFLOW_TAG}. A workflow updated without
+ * the sync tag triggers a `workflow.delete` event to remove it from targets.
+ * The `active` field on the synced DTO is rewritten based on the presence of
+ * {@link SYNC_ACTIVE_TAG}, with the source's real value preserved under
+ * `meta.active_real`. Defaults to `false` (full passthrough).
+ */
+export const SYNC_FILTER_BY_TAG = process.env.SYNC_FILTER_BY_TAG === 'true';
+
+/** Tag name that marks a workflow as eligible for sync. Default: `sync`. */
+export const SYNC_WORKFLOW_TAG = (process.env.SYNC_WORKFLOW_TAG ?? 'sync').trim() || 'sync';
+
+/** Tag name that marks a synced workflow as active on the target. Default: `active`. */
+export const SYNC_ACTIVE_TAG = (process.env.SYNC_ACTIVE_TAG ?? 'active').trim() || 'active';
 
 // Publisher
 /** Target instance base URLs. SYNC_SUBSCRIBER_URLS (comma-separated) takes precedence over SYNC_SUBSCRIBER_URL. */

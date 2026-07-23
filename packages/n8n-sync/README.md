@@ -25,6 +25,25 @@ The package builds two self-contained CommonJS hook bundles:
 - The subscriber applies events **idempotently with source IDs preserved**, using the target instance's own TypeORM repositories (resolved from n8n's DI container at runtime).
 - Credential `data` is passed through **encrypted** — all instances must share the same `N8N_ENCRYPTION_KEY` so targets can decrypt secrets at runtime.
 
+## Tag-based filtering
+
+The publisher can restrict and rewrite sync events based on n8n workflow tags. Enable it on a source instance with `SYNC_FILTER_BY_TAG=true`; the subscriber side is unaffected.
+
+| Tag (default name)           | Effect                                                                                                                                                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sync` (`SYNC_WORKFLOW_TAG`) | Workflow is eligible for syncing. Without it the publisher emits `workflow.delete` for that id (targets remove it).                                                                |
+| `active` (`SYNC_ACTIVE_TAG`) | With the `sync` tag present, presence of this tag rewrites the DTO `active` to `true`; absence rewrites it to `false`. The source's real value is preserved in `meta.active_real`. |
+
+Rules when `SYNC_FILTER_BY_TAG=true`:
+
+- **Sync tag missing** → `workflow.afterCreate`, `workflow.afterUpdate`, and `workflow.activate` emit `workflow.delete` instead of upsert (so targets converge to "absent").
+- **Sync tag present, `active` tag missing** → DTO `active=false`, `meta.active_real` holds the real source value.
+- **Sync tag present, `active` tag present** → DTO `active=true`, `meta.active_real` holds the real source value.
+- **Execution events** (`workflow.postExecute`) for workflows lacking the sync tag are silently dropped (no `workflow.delete` is emitted for executions).
+- **Tag resolution** — n8n's hook payload sometimes passes an inline `tags` array; otherwise the publisher falls back to `dbCollections.Workflow.findOne({ relations: ['tags'] })`.
+
+When `SYNC_FILTER_BY_TAG=false` (default): all workflows pass through unmodified, the DTO carries no `tags` field, and no `meta.active_real` is set. No tag-resolving DB queries run.
+
 ## Authentication
 
 Two schemes are available via `SYNC_AUTH_MODE` (must match on both sides):
@@ -38,14 +57,17 @@ Signature verification uses the exact raw request bytes (read from n8n's global 
 
 ## Wired hooks
 
-| Source hook                                         | Event                |
-| --------------------------------------------------- | -------------------- |
-| `credentials.create` / `credentials.update`         | `credentials.upsert` |
-| `credentials.delete`                                | `credentials.delete` |
-| `workflow.afterCreate` / `workflow.afterUpdate`     | `workflow.upsert`    |
-| `workflow.activate`                                 | `workflow.activate`  |
-| `workflow.afterDelete`                              | `workflow.delete`    |
-| `workflow.afterArchive` / `workflow.afterUnarchive` | `workflow.archive`   |
+| Source hook                                         | Event                | Entity       |
+| --------------------------------------------------- | -------------------- | ------------ |
+| `credentials.create` / `credentials.update`         | `credentials.upsert` | credentials  |
+| `credentials.delete`                                | `credentials.delete` | credentials  |
+| `workflow.afterCreate` / `workflow.afterUpdate`     | `workflow.upsert`    | workflows    |
+| `workflow.activate`                                 | `workflow.activate`  | workflows    |
+| `workflow.afterDelete`                              | `workflow.delete`    | workflows    |
+| `workflow.afterArchive` / `workflow.afterUnarchive` | `workflow.archive`   | workflows    |
+| `workflow.postExecute`                              | `execution.upsert`   | executions ★ |
+
+★ `workflow.postExecute` is **opt-in** — see `SYNC_ENTITIES`. It fires per execution (high volume) and the publisher handler is fire-and-forget so it never blocks n8n. The DTO carries only scalar lifecycle columns (`id`, `workflowId`, `status`, `mode`, `finished`, `startedAt`, `stoppedAt`, retry ids, `workflowVersionId`); per-step `fullRunData` is dropped to keep payloads small.
 
 ## Setup
 
@@ -74,22 +96,26 @@ Restart both instances. The subscriber logs `n8n-sync subscriber routes active.`
 
 ### Both sides
 
-| Variable             | Required | Default | Description                                                       |
-| -------------------- | -------- | ------- | ----------------------------------------------------------------- |
-| `SYNC_SHARED_SECRET` | yes      | —       | Shared secret: HMAC key (hmac mode) or bearer token (token mode). |
-| `SYNC_AUTH_MODE`     | no       | `hmac`  | `hmac` \| `token` — must match on publisher and subscriber.       |
-| `LOG_LEVEL`          | no       | `info`  | `debug` \| `info` \| `warn` \| `error`.                           |
+| Variable             | Required | Default                 | Description                                                                                                                                                                                                                                                      |
+| -------------------- | -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYNC_SHARED_SECRET` | yes      | —                       | Shared secret: HMAC key (hmac mode) or bearer token (token mode).                                                                                                                                                                                                |
+| `SYNC_AUTH_MODE`     | no       | `hmac`                  | `hmac` \| `token` — must match on publisher and subscriber.                                                                                                                                                                                                      |
+| `SYNC_ENTITIES`      | no       | `workflows,credentials` | Comma-separated subset of `workflows`, `credentials`, `executions` to sync. Unknown names are dropped. When `executions` is included, the publisher registers the high-volume `workflow.postExecute` hook and the subscriber resolves the `ExecutionRepository`. |
+| `LOG_LEVEL`          | no       | `info`                  | `debug` \| `info` \| `warn` \| `error`.                                                                                                                                                                                                                          |
 
 ### Publisher
 
-| Variable               | Required | Default                | Description                                                                               |
-| ---------------------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| `SYNC_SUBSCRIBER_URLS` | yes      | —                      | Comma-separated target base URLs (fan-out). Falls back to `SYNC_SUBSCRIBER_URL` if unset. |
-| `SYNC_SUBSCRIBER_URL`  | no       | —                      | Legacy single-target form of `SYNC_SUBSCRIBER_URLS`.                                      |
-| `SYNC_SOURCE_ID`       | no       | hostname               | Identifier stamped on every event.                                                        |
-| `SYNC_EVENTS_PATH`     | no       | `/rest/sync/v1/events` | Endpoint path on the subscriber.                                                          |
-| `SYNC_TIMEOUT_MS`      | no       | `10000`                | Per-attempt HTTP timeout.                                                                 |
-| `SYNC_MAX_RETRIES`     | no       | `3`                    | Total delivery attempts per event.                                                        |
+| Variable               | Required | Default                | Description                                                                                                                                    |
+| ---------------------- | -------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYNC_SUBSCRIBER_URLS` | yes      | —                      | Comma-separated target base URLs (fan-out). Falls back to `SYNC_SUBSCRIBER_URL` if unset.                                                      |
+| `SYNC_SUBSCRIBER_URL`  | no       | —                      | Legacy single-target form of `SYNC_SUBSCRIBER_URLS`.                                                                                           |
+| `SYNC_SOURCE_ID`       | no       | hostname               | Identifier stamped on every event.                                                                                                             |
+| `SYNC_EVENTS_PATH`     | no       | `/rest/sync/v1/events` | Endpoint path on the subscriber.                                                                                                               |
+| `SYNC_TIMEOUT_MS`      | no       | `10000`                | Per-attempt HTTP timeout.                                                                                                                      |
+| `SYNC_MAX_RETRIES`     | no       | `3`                    | Total delivery attempts per event.                                                                                                             |
+| `SYNC_FILTER_BY_TAG`   | no       | `false`                | When `true`, sync only workflows that carry `SYNC_WORKFLOW_TAG` (see [Tag-based filtering](#tag-based-filtering)).                             |
+| `SYNC_WORKFLOW_TAG`    | no       | `sync`                 | Workflow tag name that gates syncing. Effective only when `SYNC_FILTER_BY_TAG=true`.                                                           |
+| `SYNC_ACTIVE_TAG`      | no       | `active`               | Tag name that rewrites the DTO `active` to `true` (real value preserved in `meta.active_real`). Effective only when `SYNC_FILTER_BY_TAG=true`. |
 
 ### Subscriber
 
@@ -108,9 +134,12 @@ Restart both instances. The subscriber logs `n8n-sync subscriber routes active.`
 - **Deactivation does not sync.** n8n fires no external hook on workflow deactivation; the target corrects state on the next update/activate event (or stays active until then).
 - **`workflow.activate` fires pre-commit.** If a later hook rejects the activation, the subscriber may briefly hold an uncommitted state; the next event converges it.
 - **Active state is DB-only.** With `SYNC_APPLY_ACTIVE_STATE=true`, the target's `active` flag is written to the database, but triggers/webhooks are not registered with the target's active workflow manager until restart or manual toggle. Keep it `false` for passive-standby targets.
-- **One-way, last-write-wins.** Sync is directional. Upserts carry the source `updatedAt` and are skipped when the target row is already at or beyond it, so out-of-order or duplicate deliveries cannot regress state. Deletes and archives are applied unconditionally.
+- **Execution sync is summary-only.** `SYNC_ENTITIES=…,executions` upserts a row in the target's `execution_entity` table with the source ID and scalar lifecycle columns. The `execution_data` blob (per-step run data and the workflow snapshot at run time) is **not** written; target-side reads via the Public API will see the execution summary but not its run detail.
+- **Execution staleness is based on `stoppedAt`.** In-flight executions (`running`, `waiting`, `new`) carry `stoppedAt: null`; for them the last-write-wins guard is skipped so a later delivery can still converge state. Re-deliveries of the same event are no-ops.
+- **One-way, last-write-wins.** Sync is directional. Upserts carry the source monotonic timestamp (`updatedAt` for workflows/credentials, `stoppedAt` for executions) and are skipped when the target row is already at or beyond it, so out-of-order or duplicate deliveries cannot regress state. Deletes and archives are applied unconditionally.
 - **Credential sync requires a shared `N8N_ENCRYPTION_KEY`** on all instances.
 - **The delivery queue is in-memory.** Events queued but not yet delivered when the source instance restarts are lost; state converges on the next event for that entity (or stays divergent until then).
+- **Tag filtering is source-side only.** `SYNC_FILTER_BY_TAG` rewrites the publisher's DTOs and may turn an upsert into a delete; the subscriber never sees or honors tag fields. Tagging a workflow on the source does not propagate the tag itself to the target.
 
 ## Development
 

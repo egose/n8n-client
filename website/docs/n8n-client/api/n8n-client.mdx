@@ -5,7 +5,7 @@ sidebar_position: 0
 
 # N8nClient API
 
-`N8nClient` is the root entry point. It creates an HTTP client and provides access to all 15 resource clients.
+`N8nClient` is the root entry point. It creates an HTTP client and provides access to all 16 resource clients.
 
 Use this page when you want to understand the shape of the client itself: configuration, collection client access, low-level request helpers, and error behavior.
 
@@ -60,6 +60,7 @@ const { data: workflows } = await client.workflows().list({ limit: 10 });
 | `audit()` | `AuditClient` | Audit report generation |
 | `insights()` | `InsightsClient` | Execution insights |
 | `sourceControl()` | `SourceControlClient` | Source control operations |
+| `securityPolicy()` | `SecurityPolicyClient` | Instance security policy settings |
 | `discover()` | `DiscoverClient` | Resource discovery |
 | `n8nPackage()` | `N8nPackageClient` | Package import/export |
 
