@@ -96,8 +96,11 @@ Activate a workflow. You can optionally send version metadata when activating a 
 const activated = await client.workflows().activate('wf-123', {
   versionId: 'v-2',
   name: 'Production version',
+  description: 'Production revision',
 });
 ```
+
+The optional `WorkflowActivateRequest` body accepts `versionId`, `name`, and `description`.
 
 ### `deactivate(id)`
 
@@ -143,6 +146,45 @@ Get a specific workflow version.
 ```ts
 const version = await client.workflows().getVersion('wf-123', 'v-1');
 ```
+
+### Test runs
+
+`WorkflowClient` also exposes test-run history for a workflow. Test runs are workflow evaluation runs used during development; each run groups test-case executions.
+
+#### `listTestRuns(id, params?)`
+
+List test runs for the workflow.
+
+```ts
+const { data, nextCursor } = await client.workflows().listTestRuns('wf-123', {
+  status: 'completed',
+  limit: 10,
+});
+```
+
+`status` accepts `'new' | 'running' | 'completed' | 'error' | 'cancelled'`.
+
+#### `getTestRun(id, runId)`
+
+Get a single test run summary.
+
+```ts
+const run = await client.workflows().getTestRun('wf-123', 'run-456');
+```
+
+#### `listTestCases(id, runId, params?)`
+
+List the test-case executions of a specific test run.
+
+```ts
+const { data, nextCursor } = await client.workflows().listTestCases(
+  'wf-123',
+  'run-456',
+  { limit: 50 },
+);
+```
+
+The returned items include per-case status, inputs/outputs, error details, and the linked `executionId`.
 
 ## WorkflowResource
 

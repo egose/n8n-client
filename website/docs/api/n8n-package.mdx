@@ -25,14 +25,24 @@ const n8nPackage = client.n8nPackage();
 
 ### `exportWorkflows(data)`
 
-Export workflows as a downloadable package.
+Export workflows, folders, or whole projects as a downloadable gzipped package.
 
 ```ts
 const buffer = await client.n8nPackage().exportWorkflows({
   workflowIds: ['wf-1', 'wf-2'],
+  includeVariableValues: true,
+  missingWorkflowDependencyPolicy: 'include-in-package',
 });
 // buffer is ArrayBuffer (gzipped package)
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `workflowIds` | `string[]` | Loose workflows to export. Mutually exclusive with whole-project exports. |
+| `folderIds` | `string[]` | Folders to export, including nested folders. Mutually exclusive with whole-project exports. |
+| `projectIds` | `string[]` | Whole projects to export. Mutually exclusive with loose workflow/folder exports. |
+| `includeVariableValues` | `boolean` | Whether referenced variable values are bundled into the package. Defaults to `true`. |
+| `missingWorkflowDependencyPolicy` | `'fail' \| 'reference-only' \| 'include-in-package'` | Policy for missing static sub-workflow dependencies. Defaults to `fail`. |
 
 ### `importPackage(pkg, options)`
 
@@ -57,8 +67,17 @@ const result = await client.n8nPackage().importPackage(
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `projectId` | `string` | Target project for imported workflows |
-| `folderId` | `string` | Target folder for imported workflows |
-| `credentialMatchingMode` | `'id-only'` | How to match existing credentials |
-| `credentialMissingMode` | `'must-preexist'` | Fail if credentials are missing |
-| `workflowConflictPolicy` | `'new-version' \| 'fail' \| 'skip'` | How to handle workflow conflicts |
+| `projectId` | `string` | Target project for imported workflows. |
+| `folderId` | `string` | Target folder for imported workflows. |
+| `credentialMatchingMode` | `'id-only' \| 'name-and-type' \| 'type-only'` | How to match existing credentials. |
+| `credentialMissingMode` | `'must-preexist' \| 'create-stub'` | What to do when referenced credentials are missing. |
+| `bindings` | `{ credentials?: Record<string, string> }` | Optional explicit source→target id bindings, currently for credentials. |
+| `workflowConflictPolicy` | `'new-version' \| 'fail' \| 'skip'` | How to handle workflow name conflicts. **Required.** |
+| `workflowIdPolicy` | `'new' \| 'source'` | Controls the id assigned to newly created workflows. |
+| `workflowPublishingPolicy` | `'preserve-published-state' \| 'match-source' \| 'publish-all' \| 'unpublish-all'` | Controls whether imported workflows are published after import. |
+| `folderConflictPolicy` | `'merge' \| 'fail'` | Controls how folder conflicts are handled. |
+| `dataTableMatchingMode` | `'by-id'` | Controls how data tables are matched. |
+| `dataTableMissingMode` | `'create' \| 'must-preexist' \| 'do-nothing'` | Controls what happens when referenced data tables are missing. |
+| `dataTableSchemaConflictPolicy` | `'keep-existing' \| 'fail'` | Controls how strictly matched data-table schemas are compared. |
+
+The response (`ImportPackageResponse`) includes the imported `package` metadata, `workflows`, `folders`, `projects`, `credentials` (matched/stubbed), and explicit `bindings`.
