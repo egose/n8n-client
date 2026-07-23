@@ -6,7 +6,7 @@ import npm2yarn from '@docusaurus/remark-plugin-npm2yarn';
 const config: Config = {
   title: 'n8n Client',
   tagline:
-    'Typed TypeScript client for the n8n Public API. Manage workflows, executions, credentials, projects, and 15 more resources with native fetch, zero dependencies.',
+    'Typed TypeScript client for the n8n Public API. Manage workflows, executions, credentials, projects, and 16 more resources with native fetch, zero dependencies.',
   favicon: 'img/favicon.svg',
 
   future: {

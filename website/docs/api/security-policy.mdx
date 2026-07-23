@@ -1,0 +1,94 @@
+---
+sidebar_label: Security Policy
+sidebar_position: 16
+---
+
+# Security Policy API
+
+`SecurityPolicyClient` manages n8n instance-wide security policy settings — personal space publishing/sharing flags and execution data redaction enforcement.
+
+This is a singleton client (no `list`/`get(id)` style collection). Use `get()` to read the current policy and `update()` to write changes.
+
+## Access
+
+```ts
+const securityPolicy = client.securityPolicy();
+```
+
+## Methods
+
+## Common Tasks
+
+- audit whether users can publish or share from their personal space
+- enforce redaction of execution data across the instance
+- toggle personal-space sharing/publishing off during lockdown
+
+### `get()`
+
+Read the current security policy.
+
+```ts
+const policy = await client.securityPolicy().get();
+// policy.personalSpacePublishing
+// policy.personalSpaceSharing
+// policy.redactionEnforcement
+```
+
+The response also reports current counts:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `personalSpacePublishing` | `boolean` | Whether publishing from personal space is allowed |
+| `personalSpaceSharing` | `boolean` | Whether sharing from personal space is allowed |
+| `publishedPersonalWorkflowsCount` | `number` | Count of published personal workflows |
+| `sharedPersonalWorkflowsCount` | `number` | Count of shared personal workflows |
+| `sharedPersonalCredentialsCount` | `number` | Count of shared personal credentials |
+| `redactionEnforcement` | `SecurityPolicyRedactionEnforcement` | Redaction enforcement settings |
+
+### `update(data)`
+
+Replace the security policy.
+
+```ts
+const updated = await client.securityPolicy().update({
+  personalSpacePublishing: false,
+  personalSpaceSharing: false,
+  redactionEnforcement: {
+    redaction: 'enabled',
+    floor: 'all',
+  },
+});
+```
+
+`update()` accepts a full `SecurityPolicyUpdate` body (the n8n API uses `PUT /settings/security-policy`, so partial updates are not supported — pass all fields):
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `personalSpacePublishing` | `boolean` | Whether publishing from personal space is allowed |
+| `personalSpaceSharing` | `boolean` | Whether sharing from personal space is allowed |
+| `redactionEnforcement` | `SecurityPolicyRedactionEnforcement` | Redaction enforcement settings |
+
+`redactionEnforcement` has the shape:
+
+```ts
+interface SecurityPolicyRedactionEnforcement {
+  redaction: 'off' | 'enabled';
+  floor: 'off' | 'production' | 'all';
+}
+```
+
+## Typical Flow
+
+```ts
+const securityPolicy = client.securityPolicy();
+
+const current = await securityPolicy.get();
+
+if (current.personalSpacePublishing) {
+  await securityPolicy.update({
+    personalSpacePublishing: false,
+    personalSpaceSharing: current.personalSpaceSharing,
+    redactionEnforcement: current.redactionEnforcement,
+  });
+}
+```

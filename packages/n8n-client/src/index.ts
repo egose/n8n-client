@@ -21,7 +21,7 @@ import SecurityPolicyClient from './clients/security-policy.js';
 /**
  * Root client for the n8n Public API v1.
  *
- * Creates an HTTP client and provides access to all 15 resource clients.
+ * Creates an HTTP client and provides access to all 16 resource clients.
  *
  * @example
  * ```ts
