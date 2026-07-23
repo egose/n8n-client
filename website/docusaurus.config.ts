@@ -4,21 +4,21 @@ import type * as Preset from '@docusaurus/preset-classic';
 import npm2yarn from '@docusaurus/remark-plugin-npm2yarn';
 
 const config: Config = {
-  title: 'n8n Client',
+  title: 'n8n Toolkit',
   tagline:
-    'Typed TypeScript client for the n8n Public API. Manage workflows, executions, credentials, projects, and 16 more resources with native fetch, zero dependencies.',
+    'Typed, dependency-free tooling for managing and syncing n8n instances — n8n-client (TypeScript client for the n8n Public API) and n8n-sync (external-hook bundles that sync credentials and workflows between instances).',
   favicon: 'img/favicon.svg',
 
   future: {
     v4: true,
   },
 
-  url: 'https://n8n-client.pages.dev/',
+  url: 'https://n8n-toolkit.pages.dev/',
   baseUrl: '/',
   trailingSlash: true,
 
-  organizationName: 'n8n-client',
-  projectName: 'n8n-client',
+  organizationName: 'egose',
+  projectName: 'n8n-toolkit',
 
   onBrokenLinks: 'throw',
   markdown: {
@@ -50,33 +50,27 @@ const config: Config = {
   themeConfig: {
     image: 'img/social-card.png',
     navbar: {
-      title: 'n8n Client',
+      title: 'n8n Toolkit',
       logo: {
-        alt: 'n8n Client logo',
+        alt: 'n8n Toolkit logo',
         src: 'img/n8n-client-mark.svg',
         srcDark: 'img/n8n-client-mark.svg',
       },
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'about',
+          sidebarId: 'n8nClient',
           position: 'left',
-          label: 'About',
+          label: 'n8n-client',
         },
         {
           type: 'docSidebar',
-          sidebarId: 'api',
+          sidebarId: 'n8nSync',
           position: 'left',
-          label: 'API',
+          label: 'n8n-sync',
         },
         {
-          type: 'docSidebar',
-          sidebarId: 'example',
-          position: 'left',
-          label: 'Examples',
-        },
-        {
-          href: 'https://github.com/egose/n8n-client',
+          href: 'https://github.com/egose/n8n-toolkit',
           label: 'GitHub',
           position: 'right',
         },
